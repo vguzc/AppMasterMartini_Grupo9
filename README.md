@@ -29,5 +29,6 @@ El código fuente en `app/src/main/java/com/example/appmastermartini_grupo9/` si
 ---
 
 ## 👥 Integrantes - Grupo 9
-* *(Nombre del Integrante 1)*
-* *(Nombre del Integrante 2)*
+* *Guillermo Manríquez*
+* *Apolo Vallejos*
+* *Vicente Guzmán*
