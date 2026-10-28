@@ -1,0 +1,100 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="260dp"
+    android:height="140dp"
+    android:viewportWidth="260"
+    android:viewportHeight="140">
+    <!-- Fondo decorativo con bordes redondeados -->
+    <path
+        android:fillColor="#0B2F64"
+        android:pathData="M16,0 H244 A16,16 0 0 1 260,16 V124 A16,16 0 0 1 244,140 H16 A16,16 0 0 1 0,124 V16 A16,16 0 0 1 16,0 Z" />
+
+    <!-- Línea decorativa dorada superior -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M30,18 H230 V22 H30 Z" />
+
+    <!-- Emblema de Trigo / Cacao / Corona estilizado -->
+    <!-- Hoja izquierda de trigo -->
+    <path
+        android:fillColor="#E6C65C"
+        android:pathData="M110,40 C110,32 120,26 125,26 C125,34 116,42 110,40 Z" />
+    <!-- Hoja derecha de trigo -->
+    <path
+        android:fillColor="#E6C65C"
+        android:pathData="M150,40 C150,32 140,26 135,26 C135,34 144,42 150,40 Z" />
+    <!-- Semilla central / Cacao -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M130,22 C134,28 134,36 130,42 C126,36 126,28 130,22 Z" />
+
+    <!-- Tallo / Base del emblema -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M129,42 H131 V48 H129 Z" />
+
+    <!-- Letras estilizadas MASTER (M A S T E R) -->
+    <!-- Letra M -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M48,60 H54 L62,76 L70,60 H76 V86 H70 V69 L63,82 H61 L54,69 V86 H48 Z" />
+    <!-- Letra A -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M84,86 L94,60 H101 L111,86 H104 L102,80 H93 L91,86 Z M95,74 H100 L97.5,67 Z" />
+    <!-- Letra S -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M119,83 C119,85 122,86 125,86 C129,86 132,84 132,80 C132,74 121,75 121,68 C121,63 125,60 130,60 C134,60 137,62 138,65 L133,68 C132,66 131,65 129,65 C127,65 126,66 126,68 C126,72 137,71 137,79 C137,84 133,87 126,87 C120,87 114,84 114,80 Z" />
+    <!-- Letra T -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M144,65 V60 H164 V65 H157 V86 H151 V65 Z" />
+    <!-- Letra E -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M172,60 H191 V65 H178 V70 H189 V75 H178 V81 H191 V86 H172 Z" />
+    <!-- Letra R -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M199,60 H211 C217,60 220,63 220,68 C220,72 217,75 212,76 L221,86 H214 L206,77 H205 V86 H199 Z M205,72 H210 C213,72 214,71 214,68 C214,65 213,64 210,64 H205 Z" />
+
+    <!-- Subtítulo MARTINI -->
+    <!-- M -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M60,98 H64 L70,110 L76,98 H80 V118 H76 V105 L71,115 H69 L64,105 V118 H60 Z" />
+    <!-- A -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M86,118 L94,98 H100 L108,118 H103 L101,113 H93 L91,118 Z M95,108 H99 L97,103 Z" />
+    <!-- R -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M114,98 H123 C128,98 131,100 131,104 C131,107 129,110 125,110 L131,118 H126 L120,111 H119 V118 H114 Z M119,107 H123 C125,107 126,106 126,104 C126,102 125,101 123,101 H119 Z" />
+    <!-- T -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M136,102 V98 H152 V102 H147 V118 H141 V102 Z" />
+    <!-- I -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M157,98 H163 V118 H157 Z" />
+    <!-- N -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M169,98 H174 L184,112 V98 H189 V118 H184 L174,104 V118 H169 Z" />
+    <!-- I -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M195,98 H201 V118 H195 Z" />
+
+    <!-- Línea decorativa dorada inferior -->
+    <path
+        android:fillColor="#D4AF37"
+        android:pathData="M30,122 H230 V124 H30 Z" />
+
+    <!-- Subtexto UNIGRÀ -->
+    <path
+        android:fillColor="#A9C7F5"
+        android:pathData="M112,128 H148 V133 H112 Z" />
+</vector>
