@@ -16,16 +16,21 @@ import androidx.navigation.compose.rememberNavController
 import com.example.appmastermartini_grupo9.navigation.NavigationEvent
 import com.example.appmastermartini_grupo9.navigation.Screen
 import com.example.appmastermartini_grupo9.ui.screens.HomeScreen
+import com.example.appmastermartini_grupo9.ui.screens.PantallaAnimaciones
+import com.example.appmastermartini_grupo9.ui.screens.PerfilFotoScreen
 import com.example.appmastermartini_grupo9.ui.screens.ProfileScreen
+import com.example.appmastermartini_grupo9.ui.screens.RegistroScreen
+import com.example.appmastermartini_grupo9.ui.screens.ResumenScreen
 import com.example.appmastermartini_grupo9.ui.screens.SettingsScreen
 import com.example.appmastermartini_grupo9.ui.theme.AppMasterMartini_Grupo9Theme
 import com.example.appmastermartini_grupo9.viewmodel.MainViewModel
+import com.example.appmastermartini_grupo9.viewmodel.UsuarioViewModel
 import kotlinx.coroutines.flow.collectLatest
 
 /**
- * Actividad Principal (Guía 8, Guía 9 y Guía 10).
- * Integra el patrón arquitectónico MVVM desacoplando la navegación de la interfaz
- * mediante SharedFlow y Jetpack Compose Navigation.
+ * Actividad Principal Master Martini Chile (Guías 8, 9, 10, 11, 12, 13).
+ * Centraliza la navegación reactiva mediante SharedFlow y conecta todas las pantallas
+ * de las actividades prácticas con ViewModel compartido y arquitectura MVVM.
  */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,13 +38,14 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             AppMasterMartini_Grupo9Theme {
-                // ViewModel y NavController
-                val viewModel: MainViewModel = viewModel()
+                // ViewModels
+                val mainViewModel: MainViewModel = viewModel()
+                val usuarioViewModel: UsuarioViewModel = viewModel() // Compartido para Guía 11
                 val navController = rememberNavController()
 
-                // Escuchar eventos de navegación emitidos por el ViewModel (Guía 10)
+                // Escucha reactiva de eventos de navegación emitidos por MainViewModel (Guía 10)
                 LaunchedEffect(key1 = Unit) {
-                    viewModel.navigationEvents.collectLatest { event ->
+                    mainViewModel.navigationEvents.collectLatest { event ->
                         when (event) {
                             is NavigationEvent.NavigateTo -> {
                                 navController.navigate(route = event.route.route) {
@@ -69,19 +75,39 @@ class MainActivity : ComponentActivity() {
                         startDestination = Screen.Home.route,
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        // Pantalla 1: Home con ModalNavigationDrawer y TopAppBar (Guías 8 y 10)
+                        // 1. Pantalla Home (Guías 8 y 10)
                         composable(route = Screen.Home.route) {
-                            HomeScreen(navController = navController, viewModel = viewModel)
+                            HomeScreen(navController = navController, viewModel = mainViewModel)
                         }
 
-                        // Pantalla 2: Catálogo de Productos / Perfil con NavigationBar (Guía 10)
+                        // 2. Catálogo de Productos / Perfil (Guía 10)
                         composable(route = Screen.Profile.route) {
-                            ProfileScreen(navController = navController, viewModel = viewModel)
+                            ProfileScreen(navController = navController, viewModel = mainViewModel)
                         }
 
-                        // Pantalla 3: Información y Contacto Master Martini (Guía 10)
+                        // 3. Información y Contacto (Guía 10)
                         composable(route = Screen.Settings.route) {
-                            SettingsScreen(navController = navController, viewModel = viewModel)
+                            SettingsScreen(navController = navController, viewModel = mainViewModel)
+                        }
+
+                        // 4. Formulario de Registro de Usuario (Guía 11)
+                        composable(route = Screen.Registro.route) {
+                            RegistroScreen(navController = navController, viewModel = usuarioViewModel)
+                        }
+
+                        // 5. Resumen de Datos con ViewModel Compartido (Guía 11)
+                        composable(route = Screen.Resumen.route) {
+                            ResumenScreen(navController = navController, viewModel = usuarioViewModel)
+                        }
+
+                        // 6. Animaciones y Persistencia con DataStore (Guía 12)
+                        composable(route = Screen.Animaciones.route) {
+                            PantallaAnimaciones()
+                        }
+
+                        // 7. Foto de Perfil con Cámara y Galería Nativas (Guía 13)
+                        composable(route = Screen.CamaraFoto.route) {
+                            PerfilFotoScreen()
                         }
                     }
                 }

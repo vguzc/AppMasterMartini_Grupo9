@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Animation
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.ShoppingBag
@@ -27,6 +30,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -53,8 +57,8 @@ import kotlinx.coroutines.launch
 
 /**
  * =========================================================================
- * GUÍAS 8 Y 10: PANTALLA PRINCIPAL CON SCAFFOLD, TOPAPPBAR Y NAVIGATION DRAWER
- * Master Martini Chile - Insumos para Panadería, Pastelería y Chocolatería
+ * PANTALLA PRINCIPAL MASTER MARTINI CHILE
+ * Integra Drawer de navegación para acceder a todos los módulos (Guías 8, 10, 11, 12, 13)
  * =========================================================================
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -63,7 +67,6 @@ fun HomeScreen(
     navController: NavController = rememberNavController(),
     viewModel: MainViewModel = viewModel()
 ) {
-    // Estado del Drawer lateral y CoroutineScope para abrirlo/cerrarlo
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -79,7 +82,7 @@ fun HomeScreen(
                     modifier = Modifier.padding(16.dp)
                 )
 
-                // Opción 1: Navegar a Catálogo / Perfil
+                // 1. Catálogo de Productos
                 NavigationDrawerItem(
                     icon = { Icon(Icons.Default.ShoppingBag, contentDescription = "Catálogo") },
                     label = { Text("Catálogo de Productos") },
@@ -91,7 +94,43 @@ fun HomeScreen(
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                 )
 
-                // Opción 2: Navegar a Configuración y Contacto
+                // 2. Guía 11: Registro de Clientes
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Default.Edit, contentDescription = "Registro") },
+                    label = { Text("Registro Cliente (Guía 11)") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        viewModel.navigateTo(Screen.Registro)
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+
+                // 3. Guía 12: Animaciones & DataStore
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Default.Animation, contentDescription = "Animaciones") },
+                    label = { Text("Modo Profesional & Animaciones (Guía 12)") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        viewModel.navigateTo(Screen.Animaciones)
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+
+                // 4. Guía 13: Recurso Nativo Cámara y Galería
+                NavigationDrawerItem(
+                    icon = { Icon(Icons.Default.CameraAlt, contentDescription = "Cámara") },
+                    label = { Text("Foto de Perfil / Cámara (Guía 13)") },
+                    selected = false,
+                    onClick = {
+                        scope.launch { drawerState.close() }
+                        viewModel.navigateTo(Screen.CamaraFoto)
+                    },
+                    modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                )
+
+                // 5. Información y Contacto
                 NavigationDrawerItem(
                     icon = { Icon(Icons.Default.Info, contentDescription = "Contacto") },
                     label = { Text("Información y Contacto") },
@@ -131,20 +170,19 @@ fun HomeScreen(
                     .fillMaxSize()
                     .padding(16.dp)
                     .verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Logo de Master Martini (Guía 8: uso de Image, Modifier y painterResource)
+                // Logo de Master Martini
                 Image(
                     painter = painterResource(id = R.drawable.logo),
                     contentDescription = "Logo Master Martini",
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(150.dp),
+                        .height(140.dp),
                     contentScale = ContentScale.Fit
                 )
 
-                // Texto de Bienvenida con jerarquía visual
                 Text(
                     text = "¡Bienvenido a Master Martini!",
                     style = MaterialTheme.typography.titleLarge,
@@ -160,7 +198,6 @@ fun HomeScreen(
                     textAlign = TextAlign.Center
                 )
 
-                // Tarjeta de Novedades de Marca
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
@@ -168,45 +205,55 @@ fun HomeScreen(
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "🍫 Líneas Italianas Destacadas",
+                            text = "🍫 Módulos de la Aplicación",
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "Descubre nuestras coberturas Ariba, rellenos Caravella, cremas UHT Decor Up y bebidas vegetales OraSì.",
+                            text = "Utiliza el menú lateral o los botones inferiores para explorar Catálogo, Registro reactivo, Animaciones con DataStore y Cámara nativa.",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Botón 1: Ir a Catálogo / Perfil (Navegación MVVM)
+                // Botones directos a las nuevas funcionalidades
                 Button(
                     onClick = { viewModel.navigateTo(Screen.Profile) },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Explorar Catálogo de Productos", color = MaterialTheme.colorScheme.onPrimary)
+                    Text("Catálogo de Productos", color = MaterialTheme.colorScheme.onPrimary)
                 }
 
-                // Botón 2: Ir a Contacto / Configuración (Navegación MVVM)
                 Button(
-                    onClick = { viewModel.navigateTo(Screen.Settings) },
+                    onClick = { viewModel.navigateTo(Screen.Registro) },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Contacto y Sucursales", color = MaterialTheme.colorScheme.onSecondary)
+                    Text("Registro de Clientes (Guía 11)", color = MaterialTheme.colorScheme.onSecondary)
+                }
+
+                OutlinedButton(
+                    onClick = { viewModel.navigateTo(Screen.Animaciones) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Modo Profesional & Animaciones (Guía 12)")
+                }
+
+                OutlinedButton(
+                    onClick = { viewModel.navigateTo(Screen.CamaraFoto) },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Foto con Cámara y Galería (Guía 13)")
                 }
             }
         }
     }
 }
 
-// Preview requerida en Guía 8
 @Preview(showBackground = true)
 @Composable
 fun HomeScreenPreview() {
