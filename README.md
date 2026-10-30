@@ -1,150 +1,198 @@
-# AppMasterMartini - Grupo 9
+# Master Martini Chile — Aplicación Móvil Profesional
+> **Proyecto Semestral · Desarrollo de Aplicaciones Móviles (DSY1105)**  
+> **Duoc UC — Grupo 9**
 
-Aplicación móvil desarrollada en Android con **Jetpack Compose (Material 3)** aplicando la arquitectura **MVVM (Model-View-ViewModel)** para la empresa **Master Martini Chile** ([mastermartini.cl](https://mastermartini.cl/)), filial oficial del Grupo Unigrà especializada en insumos vegetales y soluciones para chocolatería, pastelería y panadería profesional.
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.2.10-blue.svg?logo=kotlin)](https://kotlinlang.org)
+[![Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4.svg?logo=android)](https://developer.android.com/jetpack/compose)
+[![Architecture](https://img.shields.io/badge/Architecture-MVVM%20%2B%20UDF-brightgreen.svg)]()
+[![Platform](https://img.shields.io/badge/Platform-Android%20(API%2024%2B)-success.svg?logo=android)](https://www.android.com)
 
----
+Aplicación móvil nativa para Android desarrollada con **Jetpack Compose** y arquitectura **MVVM (Model-View-ViewModel)** para **Master Martini Chile** ([mastermartini.cl](https://mastermartini.cl/)), filial oficial del Grupo Unigrà líder en soluciones e insumos vegetales para chocolatería, pastelería, panadería y heladería profesional.
 
-## 📌 Gestión del Proyecto y Tareas (Trello)
-
-El seguimiento y la planificación del desarrollo del proyecto se gestionan en el siguiente tablero de Trello:
-
-🔗 **[Tablero de Trello - Master Martini](https://trello.com/b/LjtchmiV/master-martini)**
-
-### Listas del Tablero:
-* 📋 **Por hacer (To Do):** Tareas planificadas para los próximos sprints.
-* ⏳ **En curso (Doing):** Tareas actualmente en desarrollo.
-* ✅ **Finalizado (Done):** Tareas completadas y verificadas.
+El proyecto fusiona la experiencia de un catálogo técnico B2B con un ecosistema comunitario y formativo inspirado en el dinamismo visual de **Pinterest** y la interacción técnica de **Threads**.
 
 ---
 
-## 📱 Guías Desarrolladas e Implementación Técnica
-
-### 🔹 Guía 8: Construcción visual de pantalla base con Jetpack Compose
-* **Estructura visual:** Uso de `Scaffold`, `TopAppBar`, `Column`, `Row`, `Text`, `Button` e `Image`.
-* **Identidad de marca:** Inclusión del recurso vectorial `logo.xml` (`R.drawable.logo`) con el emblema e identidad de Master Martini.
-* **Estilizado y buenas prácticas:** Uso de `Modifier` (`padding`, `fillMaxSize`, `verticalArrangement = Arrangement.spacedBy`) y paleta de colores corporativa mediante `MaterialTheme`.
-* **Rama y Commit:** `feature/home-screen` con mensaje `"Pantalla HomeScreen con estructura Scaffold"`.
-
-### 🔹 Guía 9: Adaptabilidad del diseño (Window Size Classes)
-* **Cálculo de pantalla:** Módulo utilitario `WindowSizeUtils.kt` con `obtenerWindowSizeClass()`.
-* **Variaciones de pantalla:**
-  * `HomeScreenCompacta`: Optimizada verticalmente para smartphones.
-  * `HomeScreenMediana`: Layout balanceado para dispositivos plegables o tablets pequeñas.
-  * `HomeScreenExpandida`: Layout de dos columnas con panel maestro y detalle para tablets grandes y monitores.
-* **Componente selector:** `HomeScreenAdaptive` que mediante `when (windowSizeClass.widthSizeClass)` selecciona dinámicamente la interfaz correcta.
-* **Previsualización:** Previews dedicadas `@Preview` para cada tamaño (`Compact`, `Medium`, `Expanded`).
-
-### 🔹 Guía 10: Navegación y estructura visual en aplicaciones (MVVM)
-* **Rutas tipo-safe:** `Screen.kt` utilizando `sealed class` (`Home`, `Profile`, `Settings`, `Detail`).
-* **Eventos desacoplados:** `NavigationEvent.kt` (`NavigateTo`, `PopBackStack`, `NavigateUp`).
-* **Lógica en ViewModel:** `MainViewModel.kt` emitiendo eventos de navegación mediante `SharedFlow<NavigationEvent>`.
-* **Componentes de navegación:**
-  * **Pantalla 1 (Home):** Integra `ModalNavigationDrawer` con menú lateral (`ModalDrawerSheet`) y `TopAppBar` con botón hamburguesa.
-  * **Pantalla 2 (Profile / Catálogo):** Integra `NavigationBar` (BottomBar) y catálogo de insumos de Master Martini (*Ariba, Caravella, Decor Up, OraSì*).
-  * **Pantalla 3 (Settings / Contacto):** Información corporativa de Master Martini Chile (Av. Américo Vespucio 1385, Quilicura, Santiago), teléfono y botones de navegación.
-* **Conexión en MainActivity:** `NavHost` controlado de forma reactiva con `LaunchedEffect` escuchando el `SharedFlow` del `MainViewModel`.
-* **Commit:** `"Navegación y menú generado"`.
-
-### 🔹 Guía 11: Formularios, validaciones y pasado de información
-* **Modelado del estado:** Clases de datos `UsuarioUiState` y `UsuarioErrores` en `model/`.
-* **Lógica del ViewModel:** `UsuarioViewModel.kt` usando `MutableStateFlow` para reactividad en tiempo real y función `validarFormulario()`.
-* **Pantalla de Registro:** `RegistroScreen.kt` con componentes de Material 3 (`OutlinedTextField`, `PasswordVisualTransformation`, `Checkbox`, `Button`, y manejo de errores con `isError` y `supportingText`).
-* **Pantalla de Resumen:** `ResumenScreen.kt` que observa el mismo `UsuarioViewModel` compartido mediante `collectAsState()`, visualizando los datos sin necesidad de pasarlos por parámetros en la ruta.
-* **Navegación:** `AppNavigation.kt` y registro en el NavHost central.
-* **Rama y Commit:** `feature/registro-formulario` con mensaje `"Formulario y resumen funcional"`.
-
-### 🔹 Guía 12: Animaciones y Estados
-* **Persistencia local:** `EstadoDataStore.kt` utilizando `androidx.datastore:datastore-preferences` (`preferencias_usuario`) para guardar de forma reactiva el estado de activación ("Modo Profesional Master Martini").
-* **Lógica del ViewModel:** `EstadoViewModel.kt` con `MutableStateFlow`, simulación de carga con retardo (`delay`), alternancia de estado y mensaje animado temporal.
-* **Feedback interactivo:** `PantallaAnimaciones.kt` con:
-  * `CircularProgressIndicator` durante la carga inicial del estado.
-  * `animateColorAsState` para transicionar suavemente el color del botón según el estado activo/inactivo.
-  * `derivedStateOf` para derivar reactivamente el texto del botón ("Activar" / "Desactivar").
-  * `AnimatedVisibility` para mostrar con animación el mensaje de confirmación cuando se guarda el estado.
-* **Commit:** `"Estado y animaciones"`.
-
-### 🔹 Guía 13: Integrando Recurso Nativo Cámara y Galería
-* **Permisos & FileProvider:** Permiso de cámara declarado en `AndroidManifest.xml` y configuración de `FileProvider` con `res/xml/file_paths.xml` para compartir URIs seguros.
-* **ViewModel:** `PerfilViewModel.kt` con `MutableStateFlow<Uri?>` para mantener sincronizado el URI de la fotografía.
-* **Componente Inteligente:** `ImagenInteligente.kt` dentro de `ui/components/` que dibuja la foto de perfil en forma circular (`clip(CircleShape)` y borde) mediante Coil (`AsyncImage`), y en caso de ausencia muestra un icono por defecto (`Icons.Default.Person`).
-* **Pantalla Perfil con Cámara:** `PerfilFotoScreen.kt` con lanzadores `rememberLauncherForActivityResult`:
-  * Galería: `ActivityResultContracts.GetContent()`
-  * Cámara: `ActivityResultContracts.TakePicture()` con URI temporal seguro.
-  * Control de errores para evitar cierres inesperados al cancelar la captura.
-* **Rama y Commit:** `feature/imagen-inteligente` con mensaje `"Funcionalidad cámara y galería integrada"`.
+## 👥 Integrantes — Grupo 9
+* **Guillermo Manríquez**
+* **Apolo Vallejos**
+* **Vicente Guzmán**
 
 ---
 
-## 🚀 Historial de Commits y Ramas en GitHub
+## 📌 Planificación y Gestión del Proyecto
+El flujo de trabajo, las historias de usuario y la distribución de tareas se gestionaron mediante metodología ágil en **Trello**:
 
-| Rama | Hash | Mensaje de Commit | Guía / Hito |
-| :--- | :--- | :--- | :--- |
-| `feature/home-screen` | `4f240b5` | `"Pantalla HomeScreen con estructura Scaffold"` | **Guía 8** |
-| `master` | `e53ef06` | `"feat: diseño adaptativo con Window Size Classes (Compact, Medium, Expanded)"` | **Guía 9** |
-| `master` | `7ea0af8` | `"Navegación y menú generado"` | **Guía 10** |
-| `feature/registro-formulario` | `6716fc3` | `"Formulario y resumen funcional"` | **Guía 11** |
-| `master` | `0d695ec` | `"Estado y animaciones"` | **Guía 12** |
-| `feature/imagen-inteligente` | `463f99f` | `"Funcionalidad cámara y galería integrada"` | **Guía 13** |
-| `master` | *reciente* | `"docs: actualizar README con documentación de Guías 11, 12 y 13"` | **Documentación Completa** |
-| `master` | *actual* | `"feat: arquitectura unificada Master Martini, correcciones de ciclo de vida y cumplimiento de rúbrica"` | **Evaluación Parcial 2** |
+🔗 **[Tablero de Planificación en Trello — Master Martini Grupo 9](https://trello.com/b/LjtchmiV/master-martini)**
+
+* 📋 **Por hacer (To Do):** Requisitos técnicos, arquitectura base y diseño de pantallas.
+* ⏳ **En curso (Doing):** Implementación de módulos, validaciones y conexión de recursos nativos.
+* ✅ **Finalizado (Done):** Pruebas unitarias, optimización de ciclo de vida, persistencia y documentación.
 
 ---
 
-## 📋 Cumplimiento de Rúbrica - Evaluación Parcial 2 (DSY1105)
+## 📱 Módulos y Funcionalidades Principales
 
-| Criterio / Indicador | Ponderación | Estado | Implementación Técnica en el Proyecto |
-| :--- | :---: | :---: | :--- |
-| **IE 2.1.1: Interfaz y Navegación** | 15% | ✅ Cumplido (100%) | `NavHost` central en `MainActivity.kt` con barra inferior flotante `FloatingBottomBar` estilo Pinterest, sistema tipográfico dual (*Plus Jakarta Sans* y *DM Sans*) y paleta de colores institucional Master Martini. |
-| **IE 2.1.2: Formularios y Validaciones Visuales** | 15% | ✅ Cumplido (100%) | `LoginRegistroScreen.kt` y `CrearRecetaScreen.kt` con validaciones por campo en tiempo real, cambio de color visual ante error (`#FFF6F6`), mensajes claros de error debajo de cada campo e íconos temáticos acordes. |
-| **IE 2.2.1: Lógica Desacoplada de Validación** | 10% | ✅ Cumplido (100%) | `UsuarioViewModel.kt` y `MainViewModel.kt` centralizan toda la lógica de validación (`UsuarioErrores`, `UsuarioUiState`, `validarFormulario()`, `iniciarSesionConDatos()`), manteniendo la UI completamente desacoplada y reactiva mediante `StateFlow`. |
-| **IE 2.2.2: Animaciones Visuales Funcionales** | 10% | ✅ Cumplido (100%) | `SplashScreen.kt` con `Animatable` (animación de entrada, escala, línea dorada y offset), `AnimatedContent` en Login/Registro y catálogo de Cursos, `animateColorAsState` en la barra flotante y retroalimentación animada temporal en `EstadoViewModel`. |
-| **IE 2.3.1: Estructura Modular y Persistencia Local** | 15% | ✅ Cumplido (100%) | Arquitectura MVVM dividida en paquetes (`data`, `model`, `repository`, `viewmodel`, `navigation`, `ui`). Persistencia local reactiva implementada con **DataStore Preferences** (`EstadoDataStore.kt`) guardando preferencias y modo oscuro con corrutinas y `Flow`. |
-| **IE 2.3.2: Colaboración y Control de Versiones** | 20% | ✅ Cumplido (100%) | Repositorio público en GitHub con commits semánticos e instructivos, y planificación completa disponible en el [Tablero de Trello](https://trello.com/b/LjtchmiV/master-martini). |
-| **IE 2.4.1: Acceso Seguro a Recursos Nativos (≥2)** | 15% | ✅ Cumplido (100%) | **1. Cámara fotográfica nativa** mediante `FileProvider` y `ActivityResultContracts.TakePicture()` creando URIs temporales seguros.<br>**2. Almacenamiento / Galería** mediante `ActivityResultContracts.GetContent()` para selección local de imágenes y videos.<br>**Recursos adicionales:** `Intent.ACTION_SEND` (compartir contenido nativo) y decodificación acelerada por hardware con `AndroidX Media3 ExoPlayer`. |
+### 1. 🌟 Descubre (Mosaico de Recetas & Pins Multimedia)
+* **Mosaico escalonado dinámico (2 columnas):** Convivencia armónica de recetas oficiales verificadas (*Sello ✓ Martini*) y creaciones compartidas por la comunidad.
+* **Reproductor de Video Integrado:** Integración con **AndroidX Media3 (ExoPlayer)** para recetas con formato audiovisual HD (como las recetas del creador invitado *Don Saco Roto*), con soporte táctil de play/pausa, silenciador flotante y pausa automática vinculada al ciclo de vida del dispositivo (`ON_PAUSE`).
+* **Filtros por categoría técnica:** Chocolatería, Pastelería, Bollería, Gelato y Salados, junto con búsqueda reactiva en tiempo real por título, autor o ingredientes.
+
+### 2. 📦 Catálogo Profesional de Productos
+* Fichas interactivas expandibles de las principales líneas de insumos de Grupo Unigrà:
+  * **Ariba:** Coberturas y chocolates puros de manteca de cacao seleccionada.
+  * **Caravella:** Cremas anhidras y sucedáneas untables para relleno y horneo.
+  * **Decor Up:** Crema vegetal UHT de alto rendimiento para montado y vitrina.
+  * **OraSì:** Bebidas vegetales barista para latte art y heladería 100% plant-based.
+  * **Maxime:** Margarinas técnicas en placa para hojaldres y masas laminadas.
+* Vinculación bidireccional entre cada producto y las recetas oficiales donde se utiliza.
+
+### 3. ➕ Creador de Contenido (Receta o Consulta de Taller)
+* Selector intuitivo de doble propósito:
+  * **Subir Receta:** Formulario completo para registrar nombre, descripción, porciones, insumos utilizados, tiempo y pasos de elaboración.
+  * **Consulta Técnica / Foro:** Publicación ágil para resolver dudas sobre puntos de batido, temperaturas de cristalización o rendimiento en obrador.
+* Carga de portada y video mediante cámara fotográfica nativa o selector de galería local.
+
+### 4. 🎓 Master Martini Academy (Cursos y Capacitación)
+* Catálogo de cursos gastronómicos clasificados en módulos gratuitos y de especialización (*Academy Pro*).
+* Indicador visual de progreso porcentual por curso (`LinearProgressIndicator`).
+* Detalle de lecciones interactivas con marcado dinámico de clases completadas y persistencia en memoria.
+
+### 5. 💬 Comunidad & Foro Técnico de Pasteleros
+* Muro de conversación con hilos de respuestas continuas conectadas por una guía visual vertical (estilo Threads).
+* Acciones sociales reactivas: Me gusta (`Like`), republicar (`Repost`), guardar en colecciones y compartir mediante el menú nativo del sistema operativo (`Intent.ACTION_SEND`).
+* Filtros rápidos entre *"Para ti"* y *"Siguiendo"* (donde destacan maestros pasteleros y chefs técnicos oficiales).
+
+### 6. 👤 Mi Espacio (Perfil de Usuario y Colecciones)
+* Visualización de recetas propias subidas y recetas guardadas.
+* **Colecciones con vista previa deslizable (*Swipeable Nested Carousel*):** Carrusel horizontal interno dentro de cada tarjeta de carpeta para previsualizar recetas guardadas sin necesidad de ingresar.
+* **Integración nativa con Cámara:** Captura fotográfica segura con `FileProvider` (`ActivityResultContracts.TakePicture`) y selección desde almacenamiento local (`ActivityResultContracts.GetContent`).
+* **Panel de Configuración:** Ajustes de cuenta, preferencias de unidades métricas, permisos de la app en Android y alternancia de Modo Oscuro.
+
+### 7. 🔐 Autenticación y Registro con Validación Robusta
+* **Modo Login y Modo Registro** con transición animada fluida (`AnimatedContent`).
+* **Validaciones desacopladas por campo:**
+  * Nombre y `@handle` con verificación de caracteres y formato.
+  * Correo electrónico con validación de sintaxis estándar (`Patterns.EMAIL_ADDRESS`).
+  * Contraseñas con longitud mínima de seguridad y comprobación estricta de coincidencia.
+  * Teléfono con filtro numérico.
+* **Retroalimentación visual accesible:** Campos con iluminación en tono de alerta suave (`#FFF6F6`), bordes en color de error del sistema y mensajes descriptivos bajo el campo afectado.
+* Opciones de recuperación de contraseña simulada y acceso rápido con perfiles sociales.
+
+---
+
+## 🏛️ Arquitectura del Software (MVVM + UDF)
+
+El proyecto está estructurado siguiendo las recomendaciones oficiales de arquitectura de Google para aplicaciones modernas en Android:
+
+```
+app/src/main/java/com/example/appmastermartini_grupo9/
+├── data/               # Persistencia local con DataStore Preferences
+│   └── EstadoDataStore.kt
+├── model/              # Modelos de datos inmutables y estados de UI
+│   ├── GastronomiaModels.kt
+│   ├── ProductItem.kt
+│   └── UsuarioUiState.kt
+├── navigation/         # Navegación tipada y eventos desacoplados
+│   ├── AppNavigation.kt
+│   ├── NavigationEvent.kt
+│   └── Screen.kt
+├── repository/         # Fuente de datos de catálogo e insumos
+│   └── ProductRepository.kt
+├── ui/
+│   ├── components/     # Componentes modulares reutilizables
+│   │   ├── FloatingBottomBar.kt
+│   │   ├── ImagenInteligente.kt
+│   │   ├── MartiniTopHeader.kt
+│   │   └── MartiniVideoPlayer.kt
+│   ├── screens/        # Vistas de la aplicación (Composables)
+│   │   ├── ComunidadScreen.kt
+│   │   ├── CrearRecetaScreen.kt
+│   │   ├── HomeScreen.kt
+│   │   ├── HomeScreenAdaptive.kt
+│   │   ├── LoginRegistroScreen.kt
+│   │   ├── PantallaAnimaciones.kt
+│   │   ├── PerfilCreadorScreen.kt
+│   │   ├── PerfilFotoScreen.kt
+│   │   ├── ProfileScreen.kt
+│   │   ├── RecetaDetalleScreen.kt
+│   │   ├── RegistroScreen.kt
+│   │   ├── ResumenScreen.kt
+│   │   ├── SettingsScreen.kt
+│   │   └── SplashScreen.kt
+│   ├── theme/          # Sistema de diseño, colores institucionales y tipografía
+│   │   ├── Color.kt
+│   │   ├── Theme.kt
+│   │   └── Type.kt
+│   └── utils/          # Utilidades de adaptabilidad (WindowSizeClass)
+│       └── WindowSizeUtils.kt
+└── viewmodel/          # ViewModels y gestión de estado reactivo
+    ├── EstadoViewModel.kt
+    ├── MainViewModel.kt
+    ├── PerfilViewModel.kt
+    └── UsuarioViewModel.kt
+```
+
+### Principios y patrones aplicados:
+* **Separación de Responsabilidades:** La interfaz de usuario (`UI`) es completamente declarativa y no contiene lógica de negocio ni persistencia directa.
+* **Unidirectional Data Flow (UDF):** El estado se expone hacia la vista mediante `StateFlow` inmutable y los eventos del usuario se canalizan a través de llamadas a métodos del `ViewModel`.
+* **Persistencia Reactiva:** Uso de **Jetpack DataStore Preferences** para guardar de manera asíncrona y reactiva las preferencias del usuario (modo oscuro y personalización) a través de corrutinas de Kotlin.
+* **Navegación desacoplada:** El `MainViewModel` emite eventos de navegación mediante `SharedFlow<NavigationEvent>`, desacoplando las acciones de negocio del `NavController`.
+* **Acceso seguro a hardware nativo:**
+  * `FileProvider` con archivo seguro `file_paths.xml` para compartir URIs de cámara temporales sin exponer rutas directas del almacenamiento.
+  * Contratos modernos de Activity Result (`ActivityResultContracts.TakePicture` y `GetContent`) evitando la sobreescritura de métodos obsoletos como `onActivityResult`.
+
+---
+
+## 🎨 Sistema de Diseño Visual e Identidad
+
+* **Paleta de Colores Corporativa:**
+  * `MartiniGreen` (`#004D42`): Verde institucional principal.
+  * `MartiniDarkKhaki` (`#B69F58`) / `MartiniKhaki` (`#FDF69E`): Dorados y tonos cálidos del emblema oficial.
+  * `MartiniFloralWhite` (`#F8F8F2`): Fondo cálido limpio para interfaces gastronómicas.
+  * Soporte nativo para **Tema Claro y Modo Oscuro**.
+* **Tipografías:**
+  * **Plus Jakarta Sans:** Títulos, encabezados y elementos de marca con curvas geométricas modernas.
+  * **DM Sans:** Lectura descansada para descripciones, ingredientes y buscadores.
+* **Animaciones Funcionales:**
+  * `Animatable` para la secuencia de inicio en `SplashScreen` (zoom del emblema, fade in y despliegue de línea dorada).
+  * `AnimatedContent` para transiciones suaves entre login y registro.
+  * `animateColorAsState` para transiciones de estado en la barra de navegación flotante.
+  * `AnimatedVisibility` para mensajes de confirmación y visibilidad de controles.
 
 ---
 
 ## 🛠️ Requisitos del Entorno y Pasos para Ejecutar
 
-### Requisitos previos:
+### Requisitos mínimos:
 * **Android Studio:** Ladybug (2024.2.1) o superior.
-* **JDK:** Java 11 o superior (configurado por defecto en Android Studio).
+* **Java Development Kit (JDK):** Versión 11 o superior.
 * **Android SDK:** `minSdk = 24` (Android 7.0 Nougat) hasta `targetSdk = 37`.
-* Dispositivo físico con depuración USB activada o Emulador Android (ej. Pixel 7 / Pixel 8 con API 34+).
+* Dispositivo físico Android con depuración USB activada o Emulador oficial (ej. Pixel 7 / Pixel 8 con API 34+).
 
-### Pasos para clonar y ejecutar:
-1. Clonar el repositorio desde GitHub:
+### Pasos de instalación y ejecución:
+
+1. **Clonar el repositorio:**
    ```bash
    git clone https://github.com/vguzc/AppMasterMartini_Grupo9.git
    ```
-2. Abrir la carpeta `AppMasterMartini_Grupo9` en **Android Studio**.
-3. Esperar que Gradle sincronice las dependencias del proyecto (`Sync Project with Gradle Files`).
-4. Seleccionar el dispositivo emulador o físico en la barra de herramientas superior.
-5. Presionar el botón **Run 'app'** (`Shift + F10`) o compilar desde la terminal:
+2. **Abrir el proyecto:**
+   * Abrir Android Studio.
+   * Seleccionar **File > Open...** y elegir la carpeta clonada `AppMasterMartini_Grupo9`.
+3. **Sincronizar dependencias Gradle:**
+   * Permitir que Android Studio sincronice las dependencias del archivo `build.gradle.kts`.
+4. **Ejecutar la aplicación:**
+   * Seleccionar el dispositivo de destino (emulador o físico).
+   * Presionar el botón **Run 'app'** (`Shift + F10`) o ejecutar desde la terminal:
+     ```bash
+     ./gradlew assembleDebug
+     ```
+5. **Ejecutar las pruebas unitarias:**
    ```bash
-   ./gradlew assembleDebug
+   ./gradlew testDebugUnitTest
    ```
 
 ---
 
-## 🏗️ Arquitectura del Proyecto (MVVM Estándar 2025)
-
-El código fuente en `app/src/main/java/com/example/appmastermartini_grupo9/` sigue una rigurosa separación de responsabilidades:
-
-* `data/`: Persistencia local con DataStore Preferences (`EstadoDataStore.kt`).
-* `model/`: Entidades de dominio, estado y errores (`GastronomiaModels.kt`, `ProductItem.kt`, `UsuarioUiState.kt`).
-* `repository/`: Proveedor de datos del catálogo de Master Martini (`ProductRepository.kt`).
-* `viewmodel/`: `MainViewModel.kt`, `UsuarioViewModel.kt`, `EstadoViewModel.kt`, `PerfilViewModel.kt`.
-* `navigation/`: Rutas tipadas (`Screen.kt`), eventos (`NavigationEvent.kt`) y flujos (`AppNavigation.kt`).
-* `ui/`:
-  * `components/`: `FloatingBottomBar.kt`, `MartiniTopHeader.kt`, `MartiniVideoPlayer.kt`, `ImagenInteligente.kt`.
-  * `screens/`: `HomeScreen.kt`, `HomeScreenAdaptive.kt`, `ProfileScreen.kt`, `CrearRecetaScreen.kt`, `PantallaAnimaciones.kt`, `ComunidadScreen.kt`, `PerfilCreadorScreen.kt`, `PerfilFotoScreen.kt`, `RecetaDetalleScreen.kt`, `LoginRegistroScreen.kt`, `SettingsScreen.kt`, `RegistroScreen.kt`, `ResumenScreen.kt`, `SplashScreen.kt`.
-  * `utils/`: `WindowSizeUtils.kt` para diseño adaptativo.
-  * `theme/`: Paleta oficial Master Martini (`MartiniGreen`, `MartiniDarkKhaki`, `MartiniKhaki`, `MartiniFloralWhite`), tipografía (*Plus Jakarta Sans*, *DM Sans*) y tema Material 3 con modo oscuro reactivo.
-
----
-
-## 👥 Integrantes - Grupo 9
-* *Guillermo Manríquez*
-* *Apolo Vallejos*
-* *Vicente Guzmán*
+## 📄 Licencia y Contexto
+Proyecto desarrollado exclusivamente con fines formativos y académicos para la asignatura de **Desarrollo de Aplicaciones Móviles (DSY1105)** en **Duoc UC**. Todos los derechos de marca, logotipos y nombres de productos pertenecen a **Master Martini Chile / Grupo Unigrà**.
