@@ -91,7 +91,7 @@ fun HomeScreenCompacta(onActionClick: () -> Unit = {}) {
         ) {
             // Logo corporativo institucional Master Martini
             Image(
-                painter = painterResource(id = R.drawable.logo),
+                painter = painterResource(id = R.drawable.logo_nb),
                 contentDescription = "Logo Master Martini",
                 modifier = Modifier
                     .fillMaxWidth()
@@ -181,7 +181,7 @@ fun HomeScreenMediana(onActionClick: () -> Unit = {}) {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.logo),
+                    painter = painterResource(id = R.drawable.logo_nb),
                     contentDescription = "Logo Master Martini",
                     modifier = Modifier
                         .weight(1f)
@@ -277,7 +277,7 @@ fun HomeScreenExpandida(onActionClick: () -> Unit = {}) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.logo),
+                        painter = painterResource(id = R.drawable.logo_nb),
                         contentDescription = "Logo Master Martini",
                         modifier = Modifier
                             .fillMaxWidth()

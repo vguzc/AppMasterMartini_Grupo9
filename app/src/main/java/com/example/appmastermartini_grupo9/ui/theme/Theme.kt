@@ -12,31 +12,45 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = MartiniNavyLight,
-    onPrimary = MartiniNavyDark,
-    primaryContainer = MartiniNavy,
-    onPrimaryContainer = Color.White,
-    secondary = MartiniGoldLight,
-    onSecondary = Color.Black,
-    tertiary = MartiniLightBlue,
-    background = Color(0xFF121316),
-    surface = Color(0xFF1E1F24),
-    onBackground = Color.White,
-    onSurface = Color.White
+    primary = MartiniGreenLight,
+    onPrimary = MartiniGreenDark,
+    primaryContainer = MartiniGreen,
+    onPrimaryContainer = MartiniWhite,
+    secondary = MartiniDarkKhaki,
+    onSecondary = MartiniGreenDark,
+    secondaryContainer = MartiniSaddleBrown,
+    onSecondaryContainer = MartiniKhaki,
+    tertiary = MartiniKhaki,
+    onTertiary = MartiniGreenDark,
+    background = MartiniGreenDark,
+    surface = Color(0xFF141E1C),
+    surfaceVariant = MartiniSlate,
+    onBackground = MartiniWhite,
+    onSurface = MartiniWhite,
+    onSurfaceVariant = MartiniGreenContainer,
+    error = MartiniCrimson,
+    onError = MartiniWhite
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = MartiniNavy,
-    onPrimary = Color.White,
-    primaryContainer = MartiniLightBlue,
-    onPrimaryContainer = MartiniNavyDark,
-    secondary = MartiniGold,
-    onSecondary = Color.White,
-    tertiary = MartiniBlue,
-    background = MartiniCream,
-    surface = Color.White,
-    onBackground = TextPrimaryDark,
-    onSurface = TextPrimaryDark
+    primary = MartiniGreen,                   // #004D42 Verde principal Master Martini
+    onPrimary = MartiniWhite,                 // #FFFFFF
+    primaryContainer = MartiniGreenContainer, // #CFD7CB Salvia suave
+    onPrimaryContainer = MartiniGreenDark,    // #001311
+    secondary = MartiniDarkKhaki,             // #B69F58 Dorado institucional
+    onSecondary = MartiniWhite,               // #FFFFFF
+    secondaryContainer = MartiniKhaki,        // #FDF69E Khaki luminoso
+    onSecondaryContainer = MartiniSaddleBrown,// #3B2F21 Cacao
+    tertiary = MartiniSaddleBrown,            // #3B2F21
+    onTertiary = MartiniWhite,
+    background = MartiniFloralWhite,          // #F8F8F2 Blanco cálido
+    surface = MartiniWhite,                   // #FFFFFF
+    surfaceVariant = MartiniWhiteSmoke,       // #F2F3F5
+    onBackground = MartiniCharcoal,           // #212326
+    onSurface = MartiniCharcoal,              // #212326
+    onSurfaceVariant = MartiniSlate,          // #304148
+    error = MartiniCrimson,                   // #E0284F
+    onError = MartiniWhite
 )
 
 @Composable

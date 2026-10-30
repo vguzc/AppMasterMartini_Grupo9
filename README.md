@@ -86,6 +86,44 @@ El seguimiento y la planificación del desarrollo del proyecto se gestionan en e
 | `master` | `0d695ec` | `"Estado y animaciones"` | **Guía 12** |
 | `feature/imagen-inteligente` | `463f99f` | `"Funcionalidad cámara y galería integrada"` | **Guía 13** |
 | `master` | *reciente* | `"docs: actualizar README con documentación de Guías 11, 12 y 13"` | **Documentación Completa** |
+| `master` | *actual* | `"feat: arquitectura unificada Master Martini, correcciones de ciclo de vida y cumplimiento de rúbrica"` | **Evaluación Parcial 2** |
+
+---
+
+## 📋 Cumplimiento de Rúbrica - Evaluación Parcial 2 (DSY1105)
+
+| Criterio / Indicador | Ponderación | Estado | Implementación Técnica en el Proyecto |
+| :--- | :---: | :---: | :--- |
+| **IE 2.1.1: Interfaz y Navegación** | 15% | ✅ Cumplido (100%) | `NavHost` central en `MainActivity.kt` con barra inferior flotante `FloatingBottomBar` estilo Pinterest, sistema tipográfico dual (*Plus Jakarta Sans* y *DM Sans*) y paleta de colores institucional Master Martini. |
+| **IE 2.1.2: Formularios y Validaciones Visuales** | 15% | ✅ Cumplido (100%) | `LoginRegistroScreen.kt` y `CrearRecetaScreen.kt` con validaciones por campo en tiempo real, cambio de color visual ante error (`#FFF6F6`), mensajes claros de error debajo de cada campo e íconos temáticos acordes. |
+| **IE 2.2.1: Lógica Desacoplada de Validación** | 10% | ✅ Cumplido (100%) | `UsuarioViewModel.kt` y `MainViewModel.kt` centralizan toda la lógica de validación (`UsuarioErrores`, `UsuarioUiState`, `validarFormulario()`, `iniciarSesionConDatos()`), manteniendo la UI completamente desacoplada y reactiva mediante `StateFlow`. |
+| **IE 2.2.2: Animaciones Visuales Funcionales** | 10% | ✅ Cumplido (100%) | `SplashScreen.kt` con `Animatable` (animación de entrada, escala, línea dorada y offset), `AnimatedContent` en Login/Registro y catálogo de Cursos, `animateColorAsState` en la barra flotante y retroalimentación animada temporal en `EstadoViewModel`. |
+| **IE 2.3.1: Estructura Modular y Persistencia Local** | 15% | ✅ Cumplido (100%) | Arquitectura MVVM dividida en paquetes (`data`, `model`, `repository`, `viewmodel`, `navigation`, `ui`). Persistencia local reactiva implementada con **DataStore Preferences** (`EstadoDataStore.kt`) guardando preferencias y modo oscuro con corrutinas y `Flow`. |
+| **IE 2.3.2: Colaboración y Control de Versiones** | 20% | ✅ Cumplido (100%) | Repositorio público en GitHub con commits semánticos e instructivos, y planificación completa disponible en el [Tablero de Trello](https://trello.com/b/LjtchmiV/master-martini). |
+| **IE 2.4.1: Acceso Seguro a Recursos Nativos (≥2)** | 15% | ✅ Cumplido (100%) | **1. Cámara fotográfica nativa** mediante `FileProvider` y `ActivityResultContracts.TakePicture()` creando URIs temporales seguros.<br>**2. Almacenamiento / Galería** mediante `ActivityResultContracts.GetContent()` para selección local de imágenes y videos.<br>**Recursos adicionales:** `Intent.ACTION_SEND` (compartir contenido nativo) y decodificación acelerada por hardware con `AndroidX Media3 ExoPlayer`. |
+
+---
+
+## 🛠️ Requisitos del Entorno y Pasos para Ejecutar
+
+### Requisitos previos:
+* **Android Studio:** Ladybug (2024.2.1) o superior.
+* **JDK:** Java 11 o superior (configurado por defecto en Android Studio).
+* **Android SDK:** `minSdk = 24` (Android 7.0 Nougat) hasta `targetSdk = 37`.
+* Dispositivo físico con depuración USB activada o Emulador Android (ej. Pixel 7 / Pixel 8 con API 34+).
+
+### Pasos para clonar y ejecutar:
+1. Clonar el repositorio desde GitHub:
+   ```bash
+   git clone https://github.com/vguzc/AppMasterMartini_Grupo9.git
+   ```
+2. Abrir la carpeta `AppMasterMartini_Grupo9` en **Android Studio**.
+3. Esperar que Gradle sincronice las dependencias del proyecto (`Sync Project with Gradle Files`).
+4. Seleccionar el dispositivo emulador o físico en la barra de herramientas superior.
+5. Presionar el botón **Run 'app'** (`Shift + F10`) o compilar desde la terminal:
+   ```bash
+   ./gradlew assembleDebug
+   ```
 
 ---
 
@@ -94,15 +132,15 @@ El seguimiento y la planificación del desarrollo del proyecto se gestionan en e
 El código fuente en `app/src/main/java/com/example/appmastermartini_grupo9/` sigue una rigurosa separación de responsabilidades:
 
 * `data/`: Persistencia local con DataStore Preferences (`EstadoDataStore.kt`).
-* `model/`: Entidades de dominio, estado y errores (`ProductItem.kt`, `UsuarioUiState.kt`, `UsuarioErrores.kt`).
+* `model/`: Entidades de dominio, estado y errores (`GastronomiaModels.kt`, `ProductItem.kt`, `UsuarioUiState.kt`).
 * `repository/`: Proveedor de datos del catálogo de Master Martini (`ProductRepository.kt`).
 * `viewmodel/`: `MainViewModel.kt`, `UsuarioViewModel.kt`, `EstadoViewModel.kt`, `PerfilViewModel.kt`.
 * `navigation/`: Rutas tipadas (`Screen.kt`), eventos (`NavigationEvent.kt`) y flujos (`AppNavigation.kt`).
 * `ui/`:
-  * `components/`: Componentes reutilizables como `ImagenInteligente.kt`.
-  * `screens/`: `HomeScreen.kt`, `HomeScreenAdaptive.kt`, `ProfileScreen.kt`, `SettingsScreen.kt`, `RegistroScreen.kt`, `ResumenScreen.kt`, `PantallaAnimaciones.kt`, `PerfilFotoScreen.kt`.
+  * `components/`: `FloatingBottomBar.kt`, `MartiniTopHeader.kt`, `MartiniVideoPlayer.kt`, `ImagenInteligente.kt`.
+  * `screens/`: `HomeScreen.kt`, `HomeScreenAdaptive.kt`, `ProfileScreen.kt`, `CrearRecetaScreen.kt`, `PantallaAnimaciones.kt`, `ComunidadScreen.kt`, `PerfilCreadorScreen.kt`, `PerfilFotoScreen.kt`, `RecetaDetalleScreen.kt`, `LoginRegistroScreen.kt`, `SettingsScreen.kt`, `RegistroScreen.kt`, `ResumenScreen.kt`, `SplashScreen.kt`.
   * `utils/`: `WindowSizeUtils.kt` para diseño adaptativo.
-  * `theme/`: Paleta oficial Master Martini (`MartiniNavy`, `MartiniGold`, `MartiniCream`), tipografía y tema Material 3.
+  * `theme/`: Paleta oficial Master Martini (`MartiniGreen`, `MartiniDarkKhaki`, `MartiniKhaki`, `MartiniFloralWhite`), tipografía (*Plus Jakarta Sans*, *DM Sans*) y tema Material 3 con modo oscuro reactivo.
 
 ---
 

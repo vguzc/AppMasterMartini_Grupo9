@@ -27,6 +27,14 @@ class UsuarioViewModel : ViewModel() {
         }
     }
 
+    // Actualiza el campo handle (nombre de usuario) y limpia su error
+    fun onHandleChange(valor: String) {
+        val limpio = valor.trim().removePrefix("@").replace(" ", "").lowercase()
+        _estado.update {
+            it.copy(handle = limpio, errores = it.errores.copy(handle = null))
+        }
+    }
+
     // Actualiza el campo correo y limpia su error
     fun onCorreoChange(valor: String) {
         _estado.update {
@@ -38,6 +46,20 @@ class UsuarioViewModel : ViewModel() {
     fun onClaveChange(valor: String) {
         _estado.update {
             it.copy(clave = valor, errores = it.errores.copy(clave = null))
+        }
+    }
+
+    // Actualiza el campo confirmar clave
+    fun onConfirmarClaveChange(valor: String) {
+        _estado.update {
+            it.copy(confirmarClave = valor)
+        }
+    }
+
+    // Actualiza el campo teléfono
+    fun onTelefonoChange(valor: String) {
+        _estado.update {
+            it.copy(telefono = valor)
         }
     }
 

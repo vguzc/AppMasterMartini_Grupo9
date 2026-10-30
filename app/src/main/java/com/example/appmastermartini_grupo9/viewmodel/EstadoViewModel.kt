@@ -34,9 +34,9 @@ class EstadoViewModel(application: Application) : AndroidViewModel(application) 
 
     fun cargarEstado() {
         viewModelScope.launch {
-            // Simula demora para mostrar loader (CircularProgressIndicator)
-            delay(1500)
-            _activo.value = estadoDataStore.obtenerEstado().first() ?: false
+            estadoDataStore.obtenerEstado().collect { valorGuardado ->
+                _activo.value = valorGuardado ?: false
+            }
         }
     }
 

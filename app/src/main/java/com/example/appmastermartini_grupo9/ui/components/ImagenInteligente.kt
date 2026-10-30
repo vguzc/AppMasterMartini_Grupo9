@@ -1,6 +1,7 @@
 package com.example.appmastermartini_grupo9.ui.components
 
 import android.net.Uri
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -16,9 +17,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.appmastermartini_grupo9.R
 
 /**
  * Componente reutilizable ImagenInteligente (Guía 13).
@@ -50,12 +53,14 @@ fun ImagenInteligente(
                 contentScale = ContentScale.Crop
             )
         } else {
-            // Ícono de perfil por defecto si no hay imagen
-            Icon(
-                imageVector = Icons.Default.Person,
-                contentDescription = "Sin imagen de perfil",
-                modifier = Modifier.size(tamano * 0.55f),
-                tint = MaterialTheme.colorScheme.primary
+            // Foto de perfil unificada por defecto (la misma de la sección Perfil)
+            Image(
+                painter = painterResource(id = R.drawable.receta_pasteleria),
+                contentDescription = "Foto de perfil",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
             )
         }
     }

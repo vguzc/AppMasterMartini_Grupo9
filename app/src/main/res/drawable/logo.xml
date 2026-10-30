@@ -5,12 +5,12 @@
     android:viewportHeight="140">
     <!-- Fondo decorativo con bordes redondeados -->
     <path
-        android:fillColor="#0B2F64"
+        android:fillColor="#004D42"
         android:pathData="M16,0 H244 A16,16 0 0 1 260,16 V124 A16,16 0 0 1 244,140 H16 A16,16 0 0 1 0,124 V16 A16,16 0 0 1 16,0 Z" />
 
     <!-- Línea decorativa dorada superior -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#B69F58"
         android:pathData="M30,18 H230 V22 H30 Z" />
 
     <!-- Emblema de Trigo / Cacao / Corona estilizado -->
@@ -29,7 +29,7 @@
 
     <!-- Tallo / Base del emblema -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#B69F58"
         android:pathData="M129,42 H131 V48 H129 Z" />
 
     <!-- Letras estilizadas MASTER (M A S T E R) -->
@@ -61,40 +61,40 @@
     <!-- Subtítulo MARTINI -->
     <!-- M -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#B69F58"
         android:pathData="M60,98 H64 L70,110 L76,98 H80 V118 H76 V105 L71,115 H69 L64,105 V118 H60 Z" />
     <!-- A -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#B69F58"
         android:pathData="M86,118 L94,98 H100 L108,118 H103 L101,113 H93 L91,118 Z M95,108 H99 L97,103 Z" />
     <!-- R -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#B69F58"
         android:pathData="M114,98 H123 C128,98 131,100 131,104 C131,107 129,110 125,110 L131,118 H126 L120,111 H119 V118 H114 Z M119,107 H123 C125,107 126,106 126,104 C126,102 125,101 123,101 H119 Z" />
     <!-- T -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#B69F58"
         android:pathData="M136,102 V98 H152 V102 H147 V118 H141 V102 Z" />
     <!-- I -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#B69F58"
         android:pathData="M157,98 H163 V118 H157 Z" />
     <!-- N -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#B69F58"
         android:pathData="M169,98 H174 L184,112 V98 H189 V118 H184 L174,104 V118 H169 Z" />
     <!-- I -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#B69F58"
         android:pathData="M195,98 H201 V118 H195 Z" />
 
     <!-- Línea decorativa dorada inferior -->
     <path
-        android:fillColor="#D4AF37"
+        android:fillColor="#B69F58"
         android:pathData="M30,122 H230 V124 H30 Z" />
 
     <!-- Subtexto UNIGRÀ -->
     <path
-        android:fillColor="#A9C7F5"
+        android:fillColor="#FDF69E"
         android:pathData="M112,128 H148 V133 H112 Z" />
 </vector>
