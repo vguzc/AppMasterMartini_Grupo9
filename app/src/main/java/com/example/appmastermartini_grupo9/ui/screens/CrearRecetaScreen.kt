@@ -48,6 +48,7 @@ import com.example.appmastermartini_grupo9.ui.components.MartiniVideoPlayer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.Icon
@@ -112,6 +113,7 @@ fun CrearRecetaScreen(
     var errorValidacion by remember { mutableStateOf<String?>(null) }
     var pedirInicioSesion by remember { mutableStateOf(false) }
     var recetaRecienPublicadaId by remember { mutableIntStateOf(-1) }
+    var publicandoReceta by remember { mutableStateOf(false) }
     var tempCameraUri by remember { mutableStateOf<Uri?>(null) }
 
     val portadasSugeridas = remember {
@@ -297,10 +299,10 @@ fun CrearRecetaScreen(
                     onClick = {
                         recetaRecienPublicadaId = -1
                         onClose()
-                        viewModel.navigateBottomTab(Screen.Home)
+                        viewModel.navigateBottomTab(Screen.Recetas)
                     }
                 ) {
-                    Text("Ver en Descubre", color = MartiniGreen)
+                    Text("Ver en Recetas", color = MartiniGreen)
                 }
             }
         )
@@ -799,21 +801,50 @@ fun CrearRecetaScreen(
                                 pedirInicioSesion = true
                             }
                             else -> {
+                                publicandoReceta = true
                                 recetaRecienPublicadaId = viewModel.publicarRecetaDesdeBorrador()
+                                publicandoReceta = false
                             }
                         }
                     },
+                    enabled = !publicandoReceta,
                     shape = RoundedCornerShape(50),
-                    colors = ButtonDefaults.buttonColors(containerColor = MartiniGreen),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MartiniGreen,
+                        disabledContainerColor = MartiniGreen.copy(alpha = 0.65f)
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 20.dp, vertical = 12.dp)
                         .height(52.dp)
                 ) {
+                    if (publicandoReceta) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            strokeWidth = 2.5.dp,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(10.dp))
+                        Text(
+                            text = "Publicando receta...",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = Color.White
+                        )
+                    } else {
+                        Text(
+                            text = "Publicar receta en Descubre",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = Color.White
+                        )
+                    }
+                }
+
+                if (publicandoReceta) {
                     Text(
-                        text = "Publicar receta en Descubre",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White
+                        text = "Guardando ingredientes y subiendo tu receta...",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MartiniGreen,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
                     )
                 }
             }

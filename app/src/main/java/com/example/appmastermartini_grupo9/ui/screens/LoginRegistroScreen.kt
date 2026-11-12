@@ -2,12 +2,12 @@ package com.example.appmastermartini_grupo9.ui.screens
 
 import android.util.Patterns
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,13 +19,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -40,7 +40,9 @@ import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -58,14 +60,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -76,9 +74,11 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.appmastermartini_grupo9.R
 import com.example.appmastermartini_grupo9.navigation.Screen
 import com.example.appmastermartini_grupo9.ui.theme.MartiniGreen
 import com.example.appmastermartini_grupo9.ui.theme.MartiniGreenDark
+import com.example.appmastermartini_grupo9.viewmodel.EstadoViewModel
 import com.example.appmastermartini_grupo9.viewmodel.MainViewModel
 import com.example.appmastermartini_grupo9.viewmodel.PerfilViewModel
 import com.example.appmastermartini_grupo9.viewmodel.UsuarioViewModel
@@ -93,14 +93,13 @@ enum class ModoAuth {
 
 /**
  * =========================================================================
- * PANTALLA DE LOGIN Y REGISTRO (INSPIRADA EN PLANTLAND / ESTILO MASTER MARTINI)
- * - Cabecera curva orgánica en verde Martini (#1B4D3E) con formas fluidas vectoriales.
- * - Sin fotos preexistentes de perfil o pastelería en cuentas no registradas.
- * - Tarjeta blanca inferior con bordes redondeados (34.dp).
- * - Campos con diseño redondeado de cápsula (#F4F6F5) e iconos lineales.
- * - Selección dedicada de Nombre de Usuario (@handle).
- * - Validaciones completas con mensajes y bordes en color de error (#BA1A1A).
- * - Sincronización limpia con el usuario activo en Comunidad y Perfil.
+ * PANTALLA DE INICIO DE SESIÓN Y REGISTRO — MASTER MARTINI CHILE
+ * Diseño estándar y profesional de aplicación móvil:
+ * - Logo oficial Master Martini superior centrado.
+ * - Selector moderno de pestañas [Iniciar Sesión] | [Registrarse].
+ * - Formularios completamente en español con etiquetas claras y placeholders amigables.
+ * - Campos con diseño Material3 accesible (borde visible, altura adaptable para adultos mayores).
+ * - Indicadores accesibles de carga en acciones largas.
  * =========================================================================
  */
 @Composable
@@ -109,232 +108,188 @@ fun LoginRegistroScreen(
     mainViewModel: MainViewModel = viewModel(),
     usuarioViewModel: UsuarioViewModel = viewModel(),
     perfilViewModel: PerfilViewModel? = null,
+    estadoViewModel: EstadoViewModel? = null,
     modoInicial: ModoAuth = ModoAuth.LOGIN
 ) {
     val context = LocalContext.current
     var modoActual by rememberSaveable { mutableStateOf(modoInicial) }
 
+    // Si el usuario está en Registro y pulsa volver atrás, retorna suavemente a Login
+    BackHandler(enabled = modoActual == ModoAuth.REGISTRO) {
+        modoActual = ModoAuth.LOGIN
+    }
+
     // Diálogo de recuperación de contraseña
     var mostrarDialogoRecuperar by remember { mutableStateOf(false) }
     var emailRecuperarDialogo by remember { mutableStateOf("") }
 
-    val verdeFondoOscuro = Color(0xFF0F3529)
-    val verdeFondoClaro = Color(0xFF1B4D3E)
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(verdeFondoOscuro, verdeFondoClaro)
-                )
-            )
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
     ) {
-        // Formas orgánicas abstractas en la esquina superior izquierda
-        Canvas(
+        Column(
             modifier = Modifier
-                .size(190.dp)
-                .offset(x = (-30).dp, y = (-20).dp)
+                .fillMaxSize()
+                .statusBarsPadding()
+                .navigationBarsPadding()
+                .imePadding()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            val w = size.width
-            val h = size.height
-
-            // Capa exterior suave (verde menta translúcido)
-            val pathExterior = Path().apply {
-                moveTo(0f, 0f)
-                lineTo(w * 0.9f, 0f)
-                cubicTo(
-                    w * 1.05f, h * 0.40f,
-                    w * 0.70f, h * 0.85f,
-                    w * 0.35f, h * 0.98f
-                )
-                cubicTo(
-                    w * 0.15f, h * 1.02f,
-                    0f, h * 0.80f,
-                    0f, h * 0.60f
-                )
-                close()
-            }
-            drawPath(pathExterior, color = Color(0xFF6FAF98).copy(alpha = 0.55f))
-
-            // Capa interior con curva tipo hoja / frijol
-            val pathInterior = Path().apply {
-                moveTo(w * 0.18f, 0f)
-                cubicTo(
-                    w * 0.65f, h * 0.22f,
-                    w * 0.60f, h * 0.68f,
-                    0f, h * 0.65f
-                )
-                lineTo(0f, 0f)
-                close()
-            }
-            drawPath(pathInterior, color = Color(0xFF8DC6B2).copy(alpha = 0.42f))
-        }
-
-        Column(modifier = Modifier.fillMaxSize()) {
-            // =========================================================================
-            // CABECERA SUPERIOR (LIMPIA, SIN FOTO DE PERFIL / FORO PREEXISTENTE)
-            // =========================================================================
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .height(if (modoActual == ModoAuth.LOGIN) 165.dp else 145.dp)
-            ) {
-                if (modoActual == ModoAuth.LOGIN) {
-                    Column(
-                        modifier = Modifier
-                            .align(Alignment.CenterStart)
-                            .padding(start = 28.dp, end = 28.dp, bottom = 10.dp)
-                    ) {
-                        Text(
-                            text = "¡Hola!",
-                            color = Color.White,
-                            fontSize = 36.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.5).sp
-                        )
-                        Spacer(modifier = Modifier.height(4.dp))
-                        Text(
-                            text = "Bienvenido a Master Martini",
-                            color = Color.White.copy(alpha = 0.92f),
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Normal
-                        )
-                    }
-                } else {
-                    // Cabecera en Registro: botón "← Volver al login" y título de bienvenida
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(horizontal = 22.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(20.dp))
-                                .clickable { modoActual = ModoAuth.LOGIN }
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Volver a Iniciar Sesión",
-                                tint = Color.White,
-                                modifier = Modifier.size(19.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text(
-                                text = "Volver al inicio de sesión",
-                                color = Color.White,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Medium
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = "Crea tu cuenta pastelera",
-                            color = Color.White,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                        Text(
-                            text = "Únete a la comunidad de maestros pasteleros",
-                            color = Color.White.copy(alpha = 0.85f),
-                            fontSize = 13.sp,
-                            modifier = Modifier.padding(start = 8.dp, top = 2.dp)
-                        )
-                    }
+            if (modoActual == ModoAuth.REGISTRO || navController.previousBackStackEntry != null) {
+                IconButton(
+                    onClick = {
+                        if (modoActual == ModoAuth.REGISTRO) modoActual = ModoAuth.LOGIN
+                        else navController.popBackStack()
+                    },
+                    modifier = Modifier.align(Alignment.Start)
+                ) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                 }
             }
 
-            // =========================================================================
-            // TARJETA BLANCA PRINCIPAL (FORMULARIO CON TRANSICIÓN ANIMADA)
-            // =========================================================================
-            Surface(
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Logo oficial Master Martini
+            Image(
+                painter = painterResource(id = R.drawable.logo_nb),
+                contentDescription = "Logo Master Martini",
+                modifier = Modifier
+                    .width(190.dp)
+                    .height(60.dp),
+                contentScale = ContentScale.Fit
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Selector moderno de pestañas: Iniciar Sesión / Registrarse
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .weight(1f),
-                shape = RoundedCornerShape(topStart = 34.dp, topEnd = 34.dp),
-                color = Color.White,
-                shadowElevation = 8.dp
+                    .background(
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                        shape = RoundedCornerShape(14.dp)
+                    )
+                    .padding(4.dp)
             ) {
-                AnimatedContent(
-                    targetState = modoActual,
-                    transitionSpec = {
-                        fadeIn() togetherWith fadeOut()
-                    },
-                    label = "AnimacionAuth"
-                ) { modo ->
-                    if (modo == ModoAuth.LOGIN) {
-                        // VISTA DE LOGIN
-                        FormularioLogin(
-                            onForgotPasswordClick = { emailIngresado ->
-                                emailRecuperarDialogo = emailIngresado
-                                mostrarDialogoRecuperar = true
-                            },
-                            onLoginSubmit = { email, password ->
-                                val nombreInferido = email.substringBefore("@")
-                                    .replace(".", " ")
-                                    .split(" ")
-                                    .filter { it.isNotBlank() }
-                                    .joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
-                                    .ifBlank { "Pastelero" }
-                                val handleInferido = email.substringBefore("@")
-                                mainViewModel.iniciarSesionConDatos(
-                                    nombre = nombreInferido,
-                                    correo = email,
-                                    handle = handleInferido
-                                )
-                                Toast.makeText(context, "¡Sesión iniciada como $nombreInferido!", Toast.LENGTH_SHORT).show()
-                                navController.navigate(Screen.Home.route) {
-                                    popUpTo(0) { inclusive = true }
-                                }
-                            },
-                            onSocialLoginClick = { red ->
-                                mainViewModel.iniciarSesionConDatos(
-                                    nombre = "Usuario $red",
-                                    correo = "usuario@$red.com",
-                                    handle = "usuario_$red"
-                                )
-                                Toast.makeText(context, "Sesión iniciada con $red", Toast.LENGTH_SHORT).show()
-                                navController.navigate(Screen.Home.route) {
-                                    popUpTo(0) { inclusive = true }
-                                }
-                            },
-                            onIrARegistro = { modoActual = ModoAuth.REGISTRO }
-                        )
-                    } else {
-                        // VISTA DE REGISTRO CON ELECCIÓN DE USUARIO Y VALIDACIONES
-                        FormularioRegistro(
-                            onSignUpSubmit = { nombre, handle, email, password, phone ->
-                                val handleLimpio = handle.trim().removePrefix("@")
-                                mainViewModel.registrarNuevoUsuario(
-                                    nombre = nombre,
-                                    handle = handleLimpio,
-                                    correo = email,
-                                    telefono = phone,
-                                    especialidad = "Pastelería Artesanal"
-                                )
-                                usuarioViewModel.onNombreChange(nombre)
-                                usuarioViewModel.onHandleChange(handleLimpio)
-                                usuarioViewModel.onCorreoChange(email)
-                                usuarioViewModel.onClaveChange(password)
-                                usuarioViewModel.onTelefonoChange(phone)
-                                perfilViewModel?.limpiarImagen()
-                                Toast.makeText(
-                                    context,
-                                    "¡Bienvenido a Master Martini, $nombre (@$handleLimpio)!",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                                navController.navigate(Screen.Home.route) {
-                                    popUpTo(0) { inclusive = true }
-                                }
-                            },
-                            onBackToLogin = { modoActual = ModoAuth.LOGIN }
-                        )
-                    }
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(11.dp))
+                        .background(if (modoActual == ModoAuth.LOGIN) MaterialTheme.colorScheme.surface else Color.Transparent)
+                        .clickable { modoActual = ModoAuth.LOGIN }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Iniciar Sesión",
+                        fontWeight = if (modoActual == ModoAuth.LOGIN) FontWeight.Bold else FontWeight.Medium,
+                        color = if (modoActual == ModoAuth.LOGIN) MartiniGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        fontSize = 14.5.sp
+                    )
+                }
+
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clip(RoundedCornerShape(11.dp))
+                        .background(if (modoActual == ModoAuth.REGISTRO) MaterialTheme.colorScheme.surface else Color.Transparent)
+                        .clickable { modoActual = ModoAuth.REGISTRO }
+                        .padding(vertical = 10.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "Crear Cuenta",
+                        fontWeight = if (modoActual == ModoAuth.REGISTRO) FontWeight.Bold else FontWeight.Medium,
+                        color = if (modoActual == ModoAuth.REGISTRO) MartiniGreen else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                        fontSize = 14.5.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            AnimatedContent(
+                targetState = modoActual,
+                transitionSpec = { fadeIn() togetherWith fadeOut() },
+                label = "AnimacionAuth"
+            ) { modo ->
+                if (modo == ModoAuth.LOGIN) {
+                    FormularioLogin(
+                        onForgotPasswordClick = { emailIngresado ->
+                            emailRecuperarDialogo = emailIngresado
+                            mostrarDialogoRecuperar = true
+                        },
+                        onLoginSubmit = { email, password ->
+                            val nombreInferido = email.substringBefore("@")
+                                .replace(".", " ")
+                                .split(" ")
+                                .filter { it.isNotBlank() }
+                                .joinToString(" ") { it.replaceFirstChar { c -> c.uppercase() } }
+                                .ifBlank { "Pastelero" }
+                            val handleInferido = email.substringBefore("@")
+                            mainViewModel.iniciarSesionConDatos(
+                                nombre = nombreInferido,
+                                correo = email,
+                                handle = handleInferido
+                            )
+                            estadoViewModel?.guardarSesion(
+                                iniciada = true,
+                                nombre = nombreInferido,
+                                correo = email,
+                                handle = handleInferido
+                            )
+                            Toast.makeText(context, "¡Bienvenido, $nombreInferido!", Toast.LENGTH_SHORT).show()
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        },
+                        onIrARegistro = { modoActual = ModoAuth.REGISTRO },
+                        onExplorarComoInvitado = {
+                            mainViewModel.entrarComoInvitado()
+                            Toast.makeText(context, "Modo invitado: Explorando Descubre", Toast.LENGTH_SHORT).show()
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        }
+                    )
+                } else {
+                    FormularioRegistro(
+                        onSignUpSubmit = { nombre, email, password, phone, direccion, rut ->
+                            val handleLimpio = email.substringBefore("@")
+                            mainViewModel.registrarNuevoUsuario(
+                                nombre = nombre,
+                                handle = handleLimpio,
+                                correo = email,
+                                telefono = phone,
+                                especialidad = "Pastelería Artesanal"
+                            )
+                            estadoViewModel?.guardarSesion(
+                                iniciada = true,
+                                nombre = nombre,
+                                correo = email,
+                                handle = handleLimpio
+                            )
+                            usuarioViewModel.onNombreChange(nombre)
+                            usuarioViewModel.onHandleChange(handleLimpio)
+                            usuarioViewModel.onCorreoChange(email)
+                            usuarioViewModel.onClaveChange(password)
+                            usuarioViewModel.onTelefonoChange(phone)
+                            usuarioViewModel.onDireccionChange(direccion)
+                            usuarioViewModel.onRutChange(rut)
+                            perfilViewModel?.limpiarImagen()
+                            Toast.makeText(
+                                context,
+                                "¡Bienvenido a Master Martini, $nombre!",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(0) { inclusive = true }
+                            }
+                        },
+                        onBackToLogin = { modoActual = ModoAuth.LOGIN }
+                    )
                 }
             }
         }
@@ -353,7 +308,7 @@ fun LoginRegistroScreen(
             },
             text = {
                 Text(
-                    text = "Enviaremos un enlace de restablecimiento seguro al correo electrónico asociado:\n\n$emailDestino",
+                    text = "Enviaremos un enlace para restablecer tu contraseña al correo electrónico:\n\n$emailDestino",
                     style = MaterialTheme.typography.bodyMedium
                 )
             },
@@ -367,7 +322,7 @@ fun LoginRegistroScreen(
                             Toast.LENGTH_LONG
                         ).show()
                     },
-                    shape = RoundedCornerShape(50),
+                    shape = RoundedCornerShape(12.dp),
                     colors = ButtonDefaults.buttonColors(containerColor = MartiniGreen)
                 ) {
                     Text("Enviar correo", color = Color.White)
@@ -384,18 +339,17 @@ fun LoginRegistroScreen(
 
 /**
  * =========================================================================
- * FORMULARIO DE LOGIN CON VALIDACIONES COMPLETAS
+ * FORMULARIO DE LOGIN CON FORMATO MÓVIL ESTÁNDAR
  * =========================================================================
  */
 @Composable
 private fun FormularioLogin(
     onForgotPasswordClick: (String) -> Unit,
     onLoginSubmit: (email: String, pass: String) -> Unit,
-    onSocialLoginClick: (String) -> Unit,
-    onIrARegistro: () -> Unit
+    onIrARegistro: () -> Unit,
+    onExplorarComoInvitado: () -> Unit = {}
 ) {
-    val scrollState = rememberScrollState()
-    val colorIcono = Color(0xFF8AA69C)
+    val colorIcono = MartiniGreen.copy(alpha = 0.7f)
 
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
@@ -403,6 +357,7 @@ private fun FormularioLogin(
 
     var emailError by rememberSaveable { mutableStateOf<String?>(null) }
     var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
+    var procesandoLogin by remember { mutableStateOf(false) }
 
     fun validar(): Boolean {
         var valido = true
@@ -411,7 +366,7 @@ private fun FormularioLogin(
             emailError = "Ingresa tu correo electrónico"
             valido = false
         } else if (!emailLimpio.contains("@") || !Patterns.EMAIL_ADDRESS.matcher(emailLimpio).matches()) {
-            emailError = "El correo debe incluir '@' y un dominio válido (ej. usuario@dominio.cl)"
+            emailError = "Ingresa un correo válido (ej. usuario@dominio.cl)"
             valido = false
         } else {
             emailError = null
@@ -426,39 +381,27 @@ private fun FormularioLogin(
         } else {
             passwordError = null
         }
+
         return valido
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(horizontal = 26.dp, vertical = 24.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Título "Login"
-        Text(
-            text = "Login",
-            color = MartiniGreenDark,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 20.dp)
-        )
-
-        // 1. Campo Email
+        // 1. Campo Correo electrónico
         AuthTextField(
+            label = "Correo electrónico",
             value = email,
             onValueChange = {
                 email = it
                 if (emailError != null) emailError = null
             },
-            placeholder = "Email (ej. pastelero@mastermartini.cl)",
+            placeholder = "ejemplo@mastermartini.cl",
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.Email,
-                    contentDescription = "Email",
+                    contentDescription = "Correo",
                     tint = if (emailError != null) MaterialTheme.colorScheme.error else colorIcono,
                     modifier = Modifier.size(20.dp)
                 )
@@ -470,18 +413,19 @@ private fun FormularioLogin(
 
         Spacer(modifier = Modifier.height(14.dp))
 
-        // 2. Campo Password
+        // 2. Campo Contraseña
         AuthTextField(
+            label = "Contraseña",
             value = password,
             onValueChange = {
                 password = it
                 if (passwordError != null) passwordError = null
             },
-            placeholder = "Password (mín. 6 caracteres)",
+            placeholder = "Ingresa tu contraseña",
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.Lock,
-                    contentDescription = "Password",
+                    contentDescription = "Contraseña",
                     tint = if (passwordError != null) MaterialTheme.colorScheme.error else colorIcono,
                     modifier = Modifier.size(20.dp)
                 )
@@ -490,9 +434,9 @@ private fun FormularioLogin(
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Icon(
                         imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                        contentDescription = "Mostrar contraseña",
+                        contentDescription = if (passwordVisible) "Ocultar contraseña" else "Mostrar contraseña",
                         tint = colorIcono,
-                        modifier = Modifier.size(19.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             },
@@ -502,17 +446,17 @@ private fun FormularioLogin(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
 
-        // Enlace "Forgot Password" a la derecha
+        // Enlace "¿Olvidaste tu contraseña?"
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 22.dp),
+                .padding(top = 8.dp, bottom = 20.dp),
             contentAlignment = Alignment.CenterEnd
         ) {
             Text(
-                text = "Forgot Password",
-                color = MartiniGreenDark,
-                fontSize = 12.5.sp,
+                text = "¿Olvidaste tu contraseña?",
+                color = MartiniGreen,
+                fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(6.dp))
@@ -521,98 +465,73 @@ private fun FormularioLogin(
             )
         }
 
-        // Botón principal "Login"
+        // Botón principal "Iniciar Sesión"
         Button(
             onClick = {
-                if (validar()) {
+                if (validar() && !procesandoLogin) {
+                    procesandoLogin = true
                     onLoginSubmit(email.trim(), password)
                 }
             },
-            shape = RoundedCornerShape(50),
-            colors = ButtonDefaults.buttonColors(containerColor = MartiniGreen),
+            enabled = !procesandoLogin,
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MartiniGreen,
+                disabledContainerColor = MartiniGreen.copy(alpha = 0.65f)
+            ),
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
+                .height(52.dp)
         ) {
+            if (procesandoLogin) {
+                CircularProgressIndicator(
+                    color = Color.White,
+                    strokeWidth = 2.5.dp,
+                    modifier = Modifier.size(22.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "Iniciando sesión...",
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            } else {
+                Text(
+                    text = "Iniciar Sesión",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        if (procesandoLogin) {
             Text(
-                text = "Login",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                text = "Abriendo la aplicación...",
+                style = MaterialTheme.typography.bodySmall,
+                color = MartiniGreenDark,
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Divisor "Or login with"
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            HorizontalDivider(
-                modifier = Modifier.weight(1f),
-                color = Color(0xFFE2E7E5),
-                thickness = 1.dp
-            )
-            Text(
-                text = "  Or login with  ",
-                color = Color(0xFF9EAAA4),
-                fontSize = 12.sp,
-                fontWeight = FontWeight.Medium
-            )
-            HorizontalDivider(
-                modifier = Modifier.weight(1f),
-                color = Color(0xFFE2E7E5),
-                thickness = 1.dp
-            )
-        }
-
-        Spacer(modifier = Modifier.height(18.dp))
-
-        // Chips de autenticación social
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            SocialLoginChip(
-                nombre = "Facebook",
-                onClick = { onSocialLoginClick("Facebook") }
-            ) {
-                FacebookIcon(modifier = Modifier.size(24.dp))
-            }
-
-            SocialLoginChip(
-                nombre = "Google",
-                onClick = { onSocialLoginClick("Google") }
-            ) {
-                GoogleIcon(modifier = Modifier.size(22.dp))
-            }
-
-            SocialLoginChip(
-                nombre = "Apple",
-                onClick = { onSocialLoginClick("Apple") }
-            ) {
-                AppleIcon(modifier = Modifier.size(22.dp))
-            }
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Enlace inferior: "Don't have account? Sign Up"
+        // Enlace inferior: "¿No tienes una cuenta? Regístrate"
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(bottom = 8.dp)
+            modifier = Modifier.padding(bottom = 6.dp)
         ) {
             Text(
-                text = "Don't have account? ",
-                color = Color(0xFF7A8B85),
-                fontSize = 13.5.sp
+                text = "¿No tienes una cuenta? ",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                fontSize = 14.sp
             )
             Text(
-                text = "Sign Up",
-                color = MartiniGreenDark,
-                fontSize = 13.5.sp,
+                text = "Regístrate",
+                color = MartiniGreen,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(4.dp))
@@ -620,88 +539,78 @@ private fun FormularioLogin(
                     .padding(horizontal = 4.dp, vertical = 2.dp)
             )
         }
+
+        // Acceso directo para explorar como invitado
+        TextButton(
+            onClick = onExplorarComoInvitado,
+            modifier = Modifier.padding(bottom = 12.dp)
+        ) {
+            Text(
+                text = "Explorar como invitado",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
+                fontSize = 13.5.sp,
+                fontWeight = FontWeight.Medium
+            )
+        }
     }
 }
 
 /**
  * =========================================================================
- * FORMULARIO DE REGISTRO CON ELECCIÓN DE USUARIO Y VALIDACIONES COMPLETAS
+ * FORMULARIO DE REGISTRO CON FORMATO MÓVIL ESTÁNDAR
  * =========================================================================
  */
 @Composable
 private fun FormularioRegistro(
-    onSignUpSubmit: (nombre: String, handle: String, email: String, pass: String, phone: String) -> Unit,
+    onSignUpSubmit: (nombre: String, email: String, pass: String, phone: String, direccion: String, rut: String) -> Unit,
     onBackToLogin: () -> Unit
 ) {
-    val scrollState = rememberScrollState()
-    val colorIcono = Color(0xFF8AA69C)
+    val colorIcono = MartiniGreen.copy(alpha = 0.7f)
 
     var nombre by rememberSaveable { mutableStateOf("") }
-    var handle by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
     var passwordVisible by rememberSaveable { mutableStateOf(false) }
     var confirmPassword by rememberSaveable { mutableStateOf("") }
     var confirmPasswordVisible by rememberSaveable { mutableStateOf(false) }
     var phone by rememberSaveable { mutableStateOf("") }
+    var direccion by remember { mutableStateOf("") }
+    var rut by remember { mutableStateOf("") }
 
-    // Errores individuales
     var nombreError by rememberSaveable { mutableStateOf<String?>(null) }
-    var handleError by rememberSaveable { mutableStateOf<String?>(null) }
     var emailError by rememberSaveable { mutableStateOf<String?>(null) }
     var passwordError by rememberSaveable { mutableStateOf<String?>(null) }
+    var procesandoRegistro by remember { mutableStateOf(false) }
     var confirmPasswordError by rememberSaveable { mutableStateOf<String?>(null) }
     var phoneError by rememberSaveable { mutableStateOf<String?>(null) }
+    var direccionError by remember { mutableStateOf<String?>(null) }
+    var rutError by remember { mutableStateOf<String?>(null) }
 
     fun validar(): Boolean {
         var valido = true
 
-        // 1. Nombre
         val nomLimpio = nombre.trim()
         if (nomLimpio.isBlank()) {
             nombreError = "Ingresa tu nombre completo"
             valido = false
-        } else if (nomLimpio.length < 3) {
-            nombreError = "El nombre debe tener al menos 3 caracteres"
+        } else if (nomLimpio.count { it.isLetter() } < 2) {
+            nombreError = "Ingresa un nombre válido"
             valido = false
         } else {
             nombreError = null
         }
 
-        // 2. Nombre de usuario / handle
-        val hLimpio = handle.trim().removePrefix("@")
-        if (hLimpio.isBlank()) {
-            handleError = "Escoge tu nombre de usuario para la comunidad"
-            valido = false
-        } else if (hLimpio.length < 3) {
-            handleError = "El usuario debe tener al menos 3 caracteres"
-            valido = false
-        } else if (hLimpio.contains(" ")) {
-            handleError = "El nombre de usuario no puede contener espacios"
-            valido = false
-        } else if (!hLimpio.matches(Regex("^[a-zA-Z0-9_.]+$"))) {
-            handleError = "Usa solo letras, números, puntos o guiones bajos"
-            valido = false
-        } else {
-            handleError = null
-        }
-
-        // 3. Email
         val emailLimpio = email.trim()
         if (emailLimpio.isBlank()) {
             emailError = "Ingresa tu correo electrónico"
             valido = false
-        } else if (!emailLimpio.contains("@")) {
-            emailError = "El correo debe contener el símbolo '@'"
-            valido = false
-        } else if (!Patterns.EMAIL_ADDRESS.matcher(emailLimpio).matches()) {
-            emailError = "Formato de correo no válido (ej. pastelero@dominio.cl)"
+        } else if (!emailLimpio.contains("@") || !Patterns.EMAIL_ADDRESS.matcher(emailLimpio).matches()) {
+            emailError = "Ingresa un correo válido (ej. usuario@dominio.cl)"
             valido = false
         } else {
             emailError = null
         }
 
-        // 4. Password
         if (password.isBlank()) {
             passwordError = "Crea una contraseña"
             valido = false
@@ -712,7 +621,6 @@ private fun FormularioRegistro(
             passwordError = null
         }
 
-        // 5. Confirm Password
         if (confirmPassword.isBlank()) {
             confirmPasswordError = "Confirma tu contraseña"
             valido = false
@@ -723,74 +631,38 @@ private fun FormularioRegistro(
             confirmPasswordError = null
         }
 
-        // 6. Phone
-        val phoneLimpio = phone.trim()
-        val digitos = phoneLimpio.filter { it.isDigit() }
-        if (phoneLimpio.isBlank()) {
-            phoneError = "Ingresa tu número telefónico"
-            valido = false
-        } else if (digitos.length < 8) {
-            phoneError = "Ingresa un teléfono válido (al menos 8 dígitos)"
-            valido = false
-        } else {
-            phoneError = null
+        phoneError = when {
+            phone.isBlank() -> "Ingresa tu teléfono de contacto"
+            normalizarTelefonoChileno(phone) == null -> "Ingresa un teléfono chileno de 9 dígitos"
+            else -> null
+        }
+        direccionError = when {
+            direccion.isBlank() -> "Ingresa tu dirección"
+            direccion.none { it.isLetter() } -> "Escribe el nombre de la calle o localidad"
+            else -> null
+        }
+        rutError = when {
+            rut.isBlank() -> "Ingresa tu RUT"
+            normalizarRut(rut) == null -> "Revisa el RUT y su dígito verificador"
+            else -> null
         }
 
-        return valido
+        return valido && phoneError == null && direccionError == null && rutError == null
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(scrollState)
-            .padding(horizontal = 26.dp, vertical = 22.dp),
+        modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Enlace "← Back to login"
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(6.dp))
-                .clickable(onClick = onBackToLogin)
-                .padding(vertical = 4.dp)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Volver",
-                tint = MartiniGreenDark,
-                modifier = Modifier.size(16.dp)
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = "Back to login",
-                color = MartiniGreenDark,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-        Spacer(modifier = Modifier.height(10.dp))
-
-        // Título "Sign Up"
-        Text(
-            text = "Sign Up",
-            color = MartiniGreenDark,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = 16.dp)
-        )
-
-        // 1. Campo Nombre Completo
+        // 1. Nombre Completo
         AuthTextField(
+            label = "Nombre completo",
             value = nombre,
             onValueChange = {
                 nombre = it
                 if (nombreError != null) nombreError = null
             },
-            placeholder = "Nombre completo (ej. Carlos Morales)",
+            placeholder = "ej. Carlos Morales",
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.Person,
@@ -806,39 +678,15 @@ private fun FormularioRegistro(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 2. Campo Nombre de Usuario (@handle)
+        // 3. Correo electrónico
         AuthTextField(
-            value = handle,
-            onValueChange = {
-                handle = it
-                if (handleError != null) handleError = null
-            },
-            placeholder = "Nombre de usuario (ej. @carlos_pasteles)",
-            leadingIcon = {
-                Box(contentAlignment = Alignment.Center, modifier = Modifier.size(20.dp)) {
-                    Text(
-                        text = "@",
-                        color = if (handleError != null) MaterialTheme.colorScheme.error else colorIcono,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 17.sp
-                    )
-                }
-            },
-            isError = handleError != null,
-            errorMessage = handleError,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
-        )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // 3. Campo Email
-        AuthTextField(
+            label = "Correo electrónico",
             value = email,
             onValueChange = {
                 email = it
                 if (emailError != null) emailError = null
             },
-            placeholder = "Email (ej. carlos@pasteleria.cl)",
+            placeholder = "carlos@pasteleria.cl",
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.Email,
@@ -854,18 +702,71 @@ private fun FormularioRegistro(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 4. Campo Password
+        // 4. Teléfono
         AuthTextField(
+            label = "Teléfono de contacto",
+            value = phone,
+            onValueChange = {
+                phone = it
+                if (phoneError != null) phoneError = null
+            },
+            placeholder = "+56 9 1234 5678",
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Outlined.Phone,
+                    contentDescription = "Teléfono",
+                    tint = if (phoneError != null) MaterialTheme.colorScheme.error else colorIcono,
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            isError = phoneError != null,
+            errorMessage = phoneError,
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AuthTextField(
+            label = "Dirección",
+            value = direccion,
+            onValueChange = {
+                direccion = it
+                direccionError = null
+            },
+            placeholder = "Calle, número y comuna",
+            isError = direccionError != null,
+            errorMessage = direccionError
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        AuthTextField(
+            label = "RUT",
+            value = rut,
+            onValueChange = {
+                rut = it
+                rutError = null
+            },
+            placeholder = "12.345.678-5",
+            isError = rutError != null,
+            errorMessage = rutError
+        )
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        // 5. Contraseña
+        AuthTextField(
+            label = "Contraseña",
             value = password,
             onValueChange = {
                 password = it
                 if (passwordError != null) passwordError = null
             },
-            placeholder = "Password (mín. 6 caracteres)",
+            placeholder = "Mínimo 6 caracteres",
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.Lock,
-                    contentDescription = "Password",
+                    contentDescription = "Contraseña",
                     tint = if (passwordError != null) MaterialTheme.colorScheme.error else colorIcono,
                     modifier = Modifier.size(20.dp)
                 )
@@ -876,7 +777,7 @@ private fun FormularioRegistro(
                         imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                         contentDescription = "Mostrar contraseña",
                         tint = colorIcono,
-                        modifier = Modifier.size(19.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             },
@@ -888,18 +789,19 @@ private fun FormularioRegistro(
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // 5. Campo Confirm Password
+        // 6. Confirmar Contraseña
         AuthTextField(
+            label = "Confirmar contraseña",
             value = confirmPassword,
             onValueChange = {
                 confirmPassword = it
                 if (confirmPasswordError != null) confirmPasswordError = null
             },
-            placeholder = "Confirm Password",
+            placeholder = "Repite tu contraseña",
             leadingIcon = {
                 Icon(
                     imageVector = Icons.Outlined.Lock,
-                    contentDescription = "Confirm Password",
+                    contentDescription = "Confirmar contraseña",
                     tint = if (confirmPasswordError != null) MaterialTheme.colorScheme.error else colorIcono,
                     modifier = Modifier.size(20.dp)
                 )
@@ -908,9 +810,9 @@ private fun FormularioRegistro(
                 IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
                     Icon(
                         imageVector = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                        contentDescription = "Mostrar confirmación de contraseña",
+                        contentDescription = "Mostrar confirmación",
                         tint = colorIcono,
-                        modifier = Modifier.size(19.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             },
@@ -920,69 +822,78 @@ private fun FormularioRegistro(
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // 6. Campo Phone
-        AuthTextField(
-            value = phone,
-            onValueChange = {
-                phone = it
-                if (phoneError != null) phoneError = null
-            },
-            placeholder = "Phone (ej. +56 9 1234 5678)",
-            leadingIcon = {
-                Icon(
-                    imageVector = Icons.Outlined.Phone,
-                    contentDescription = "Phone",
-                    tint = if (phoneError != null) MaterialTheme.colorScheme.error else colorIcono,
-                    modifier = Modifier.size(20.dp)
-                )
-            },
-            isError = phoneError != null,
-            errorMessage = phoneError,
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
-        )
-
-        Spacer(modifier = Modifier.height(22.dp))
-
-        // Botón principal "Sign Up"
+        // Botón principal "Crear Cuenta"
         Button(
             onClick = {
-                if (validar()) {
-                    onSignUpSubmit(nombre.trim(), handle.trim(), email.trim(), password, phone.trim())
+                if (validar() && !procesandoRegistro) {
+                    procesandoRegistro = true
+                    onSignUpSubmit(
+                        nombre.trim(), email.trim(), password, normalizarTelefonoChileno(phone).orEmpty(),
+                        direccion.trim(), normalizarRut(rut).orEmpty()
+                    )
                 }
             },
-            shape = RoundedCornerShape(50),
-            colors = ButtonDefaults.buttonColors(containerColor = MartiniGreen),
+            enabled = !procesandoRegistro,
+            shape = RoundedCornerShape(14.dp),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = MartiniGreen,
+                disabledContainerColor = MartiniGreen.copy(alpha = 0.65f)
+            ),
             elevation = ButtonDefaults.buttonElevation(defaultElevation = 2.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .height(50.dp)
+                .height(52.dp)
         ) {
+            if (procesandoRegistro) {
+                CircularProgressIndicator(
+                    color = Color.White,
+                    strokeWidth = 2.5.dp,
+                    modifier = Modifier.size(22.dp)
+                )
+                Spacer(modifier = Modifier.width(10.dp))
+                Text(
+                    text = "Creando cuenta...",
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            } else {
+                Text(
+                    text = "Crear Cuenta",
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        if (procesandoRegistro) {
             Text(
-                text = "Sign Up",
-                color = Color.White,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold
+                text = "Registrando tu perfil pastelero en Master Martini...",
+                style = MaterialTheme.typography.bodySmall,
+                color = MartiniGreenDark,
+                modifier = Modifier.padding(top = 8.dp)
             )
         }
 
-        Spacer(modifier = Modifier.height(18.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // Enlace inferior para volver a Login
+        // Enlace para volver a Iniciar Sesión
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(bottom = 12.dp)
         ) {
             Text(
-                text = "Already have an account? ",
-                color = Color(0xFF7A8B85),
-                fontSize = 13.5.sp
+                text = "¿Ya tienes una cuenta? ",
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f),
+                fontSize = 14.sp
             )
             Text(
-                text = "Login",
-                color = MartiniGreenDark,
-                fontSize = 13.5.sp,
+                text = "Inicia sesión",
+                color = MartiniGreen,
+                fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .clip(RoundedCornerShape(4.dp))
@@ -994,13 +905,49 @@ private fun FormularioRegistro(
 }
 
 /**
- * Campo de texto estilizado tipo píldora con validación reactiva y mensaje de error
+ * =========================================================================
+ * CAMPO DE TEXTO ESTÁNDAR PARA AUTENTICACIÓN MÓVIL
+ * =========================================================================
  */
+private val formatoTelefono = Regex("[+]?[0-9 ()-]+")
+private val numeroChileno = Regex("[2-9][0-9]{8}")
+private val formatoRut = Regex("(?:[0-9]{1,8}|[0-9]{1,3}(?:\\.[0-9]{3}){1,2})-?[0-9K]")
+
+private fun normalizarTelefonoChileno(telefono: String): String? {
+    val entrada = telefono.trim()
+    if (!formatoTelefono.matches(entrada)) return null
+    val digitos = entrada.filter { it in '0'..'9' }
+    val nacional = when {
+        digitos.length == 11 && digitos.startsWith("56") -> digitos.drop(2)
+        !entrada.startsWith("+") -> digitos
+        else -> return null
+    }
+    return if (numeroChileno.matches(nacional)) "+56$nacional" else null
+}
+
+private fun normalizarRut(rut: String): String? {
+    val entrada = rut.trim().uppercase()
+    if (!formatoRut.matches(entrada)) return null
+    val compacto = entrada.filterNot { it == '.' || it == '-' }
+    val cuerpo = compacto.dropLast(1)
+    if (cuerpo.length > 8 || cuerpo.all { it == '0' }) return null
+    val suma = cuerpo.reversed().mapIndexed { indice, digito ->
+        digito.digitToInt() * (2 + indice % 6)
+    }.sum()
+    val verificador = when (val resto = 11 - suma % 11) {
+        11 -> '0'
+        10 -> 'K'
+        else -> resto.digitToChar()
+    }
+    return if (compacto.last() == verificador) "$cuerpo-$verificador" else null
+}
+
 @Composable
 private fun AuthTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
+    label: String? = null,
     leadingIcon: @Composable (() -> Unit)? = null,
     trailingIcon: @Composable (() -> Unit)? = null,
     isError: Boolean = false,
@@ -1009,184 +956,52 @@ private fun AuthTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     modifier: Modifier = Modifier
 ) {
-    val colorCampoBg = Color(0xFFF4F6F5)
-    val colorErrorBg = Color(0xFFFFF6F6)
-
     Column(modifier = modifier.fillMaxWidth()) {
+        if (label != null) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium.copy(
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.5.sp
+                ),
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
+                modifier = Modifier.padding(bottom = 5.dp, start = 2.dp)
+            )
+        }
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            placeholder = { Text(placeholder, color = Color(0xFF9EAAA4), fontSize = 13.5.sp) },
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
+                    fontSize = 14.sp
+                )
+            },
             leadingIcon = leadingIcon,
             trailingIcon = trailingIcon,
             singleLine = true,
             isError = isError,
             visualTransformation = visualTransformation,
-            shape = RoundedCornerShape(50),
+            shape = RoundedCornerShape(12.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = if (isError) colorErrorBg else colorCampoBg,
-                unfocusedContainerColor = if (isError) colorErrorBg else colorCampoBg,
-                focusedBorderColor = if (isError) MaterialTheme.colorScheme.error else MartiniGreen,
-                unfocusedBorderColor = if (isError) MaterialTheme.colorScheme.error.copy(alpha = 0.7f) else Color.Transparent,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.25f),
+                focusedBorderColor = MartiniGreen,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.6f),
                 errorBorderColor = MaterialTheme.colorScheme.error,
-                cursorColor = if (isError) MaterialTheme.colorScheme.error else MartiniGreen,
-                errorCursorColor = MaterialTheme.colorScheme.error
+                cursorColor = MartiniGreen
             ),
             keyboardOptions = keyboardOptions,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(54.dp)
+            modifier = Modifier.fillMaxWidth()
         )
         if (isError && !errorMessage.isNullOrBlank()) {
             Text(
                 text = errorMessage,
                 color = MaterialTheme.colorScheme.error,
-                fontSize = 11.5.sp,
-                modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                fontSize = 12.sp,
+                modifier = Modifier.padding(start = 6.dp, top = 4.dp)
             )
         }
-    }
-}
-
-/**
- * Chip contenedor para los botones sociales (Facebook, Google, Apple)
- */
-@Composable
-private fun SocialLoginChip(
-    nombre: String,
-    onClick: () -> Unit,
-    icon: @Composable () -> Unit
-) {
-    Surface(
-        onClick = onClick,
-        shape = RoundedCornerShape(16.dp),
-        color = Color.White,
-        border = BorderStroke(1.dp, Color(0xFFE4E8E6)),
-        shadowElevation = 1.dp,
-        modifier = Modifier.size(54.dp)
-    ) {
-        Box(contentAlignment = Alignment.Center) {
-            icon()
-        }
-    }
-}
-
-/**
- * Ícono de Facebook (círculo azul con letra 'f' blanca)
- */
-@Composable
-private fun FacebookIcon(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier
-            .clip(CircleShape)
-            .background(Color(0xFF1877F2)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "f",
-            color = Color.White,
-            fontWeight = FontWeight.Black,
-            fontSize = 16.sp,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.offset(y = (-1).dp)
-        )
-    }
-}
-
-/**
- * Ícono vectorial oficial de Google con sus 4 colores
- */
-@Composable
-private fun GoogleIcon(modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val s = size.minDimension
-        val stroke = s * 0.18f
-        val radius = (s - stroke) / 2f
-        val center = Offset(s / 2f, s / 2f)
-
-        // Rojo (superior)
-        drawArc(
-            color = Color(0xFFEA4335),
-            startAngle = -45f,
-            sweepAngle = -110f,
-            useCenter = false,
-            topLeft = Offset(stroke / 2, stroke / 2),
-            size = Size(radius * 2, radius * 2),
-            style = Stroke(width = stroke, cap = StrokeCap.Round)
-        )
-        // Amarillo (lateral izquierdo)
-        drawArc(
-            color = Color(0xFFFBBC05),
-            startAngle = -155f,
-            sweepAngle = -70f,
-            useCenter = false,
-            topLeft = Offset(stroke / 2, stroke / 2),
-            size = Size(radius * 2, radius * 2),
-            style = Stroke(width = stroke, cap = StrokeCap.Round)
-        )
-        // Verde (inferior)
-        drawArc(
-            color = Color(0xFF34A853),
-            startAngle = -225f,
-            sweepAngle = -90f,
-            useCenter = false,
-            topLeft = Offset(stroke / 2, stroke / 2),
-            size = Size(radius * 2, radius * 2),
-            style = Stroke(width = stroke, cap = StrokeCap.Round)
-        )
-        // Azul (cuadrante inferior derecho)
-        drawArc(
-            color = Color(0xFF4285F4),
-            startAngle = 45f,
-            sweepAngle = -50f,
-            useCenter = false,
-            topLeft = Offset(stroke / 2, stroke / 2),
-            size = Size(radius * 2, radius * 2),
-            style = Stroke(width = stroke, cap = StrokeCap.Butt)
-        )
-        // Barra horizontal azul central
-        drawLine(
-            color = Color(0xFF4285F4),
-            start = Offset(center.x, center.y),
-            end = Offset(center.x + radius + stroke / 2, center.y),
-            strokeWidth = stroke,
-            cap = StrokeCap.Round
-        )
-    }
-}
-
-/**
- * Ícono de Apple (silueta negra vectorizada con hoja)
- */
-@Composable
-private fun AppleIcon(modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val w = size.width
-        val h = size.height
-
-        // Cuerpo de la manzana
-        val manzana = Path().apply {
-            moveTo(w * 0.50f, h * 0.28f)
-            cubicTo(w * 0.60f, h * 0.28f, w * 0.72f, h * 0.22f, w * 0.80f, h * 0.28f)
-            cubicTo(w * 0.88f, h * 0.35f, w * 0.95f, h * 0.52f, w * 0.85f, h * 0.72f)
-            cubicTo(w * 0.78f, h * 0.84f, w * 0.70f, h * 0.95f, w * 0.58f, h * 0.95f)
-            cubicTo(w * 0.48f, h * 0.95f, w * 0.42f, h * 0.88f, w * 0.32f, h * 0.88f)
-            cubicTo(w * 0.22f, h * 0.88f, w * 0.15f, h * 0.95f, w * 0.06f, h * 0.95f)
-            cubicTo(-0.06f, h * 0.95f, -0.06f, h * 0.68f, 0.05f, h * 0.48f)
-            cubicTo(0.14f, h * 0.32f, 0.28f, h * 0.24f, 0.42f, h * 0.24f)
-            cubicTo(0.48f, h * 0.24f, w * 0.50f, h * 0.28f, w * 0.50f, h * 0.28f)
-            close()
-        }
-        drawPath(manzana, color = Color(0xFF1E2421))
-
-        // Hoja superior
-        val hoja = Path().apply {
-            moveTo(w * 0.52f, h * 0.22f)
-            cubicTo(w * 0.58f, h * 0.12f, w * 0.68f, h * 0.05f, w * 0.68f, h * 0.05f)
-            cubicTo(w * 0.68f, h * 0.05f, w * 0.56f, h * 0.06f, w * 0.49f, h * 0.15f)
-            cubicTo(w * 0.44f, h * 0.22f, w * 0.52f, h * 0.22f, w * 0.52f, h * 0.22f)
-            close()
-        }
-        drawPath(hoja, color = Color(0xFF1E2421))
     }
 }

@@ -7,24 +7,26 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.MenuBook
-import androidx.compose.material.icons.automirrored.outlined.MenuBook
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.filled.GridView
-import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.outlined.GridView
-import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.School
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -35,7 +37,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.appmastermartini_grupo9.navigation.Screen
 import com.example.appmastermartini_grupo9.ui.theme.MartiniCharcoal
 import com.example.appmastermartini_grupo9.ui.theme.MartiniGreen
@@ -48,15 +53,7 @@ data class FloatingNavItem(
     val unselectedIcon: ImageVector
 )
 
-/**
- * =========================================================================
- * NAVEGACIÓN INFERIOR ESTILO PINTEREST (BOTONES SQUIRCLE INDEPENDIENTES)
- * - Al subir "+" (Crear) y Perfil arriba a la derecha, abajo quedan nuestras
- *   4 secciones principales en cubos redondeados flotantes independientes:
- *   Recetas · Productos · Cursos · Comunidad
- * - Sin texto debajo, dejando ver sutilmente las fotografías entre botones.
- * =========================================================================
- */
+/** Accesos rápidos de las pantallas secundarias, con regreso a Descubre. */
 @Composable
 fun FloatingBottomBar(
     selectedRoute: String,
@@ -83,9 +80,9 @@ fun FloatingBottomBar(
         listOf(
             FloatingNavItem(
                 route = Screen.Home,
-                label = "Recetas",
-                selectedIcon = Icons.AutoMirrored.Filled.MenuBook,
-                unselectedIcon = Icons.AutoMirrored.Outlined.MenuBook
+                label = "Descubre",
+                selectedIcon = Icons.Filled.Home,
+                unselectedIcon = Icons.Outlined.Home
             ),
             FloatingNavItem(
                 route = Screen.Profile,
@@ -98,12 +95,6 @@ fun FloatingBottomBar(
                 label = "Cursos",
                 selectedIcon = Icons.Filled.School,
                 unselectedIcon = Icons.Outlined.School
-            ),
-            FloatingNavItem(
-                route = Screen.Comunidad,
-                label = "Comunidad",
-                selectedIcon = Icons.Filled.Groups,
-                unselectedIcon = Icons.Outlined.Groups
             )
         )
     }
@@ -149,7 +140,7 @@ fun FloatingBottomBar(
                     shape = tileShape,
                     color = tileBg,
                     modifier = Modifier
-                        .size(width = 56.dp, height = 52.dp)
+                        .size(width = 72.dp, height = 60.dp)
                         .shadow(
                             elevation = if (isSelected) 14.dp else 10.dp,
                             shape = tileShape,
@@ -172,12 +163,25 @@ fun FloatingBottomBar(
                             }
                         )
                 ) {
-                    Box(contentAlignment = Alignment.Center) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 4.dp)
+                    ) {
                         Icon(
                             imageVector = if (isSelected) item.selectedIcon else item.unselectedIcon,
                             contentDescription = item.label,
                             tint = iconTint,
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier.size(22.dp)
+                        )
+                        Spacer(modifier = Modifier.height(2.dp))
+                        Text(
+                            text = item.label,
+                            fontSize = 11.sp,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                            color = iconTint,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
                         )
                     }
                 }

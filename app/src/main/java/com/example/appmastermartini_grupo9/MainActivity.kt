@@ -15,10 +15,13 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -27,17 +30,17 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.appmastermartini_grupo9.navigation.NavigationEvent
 import com.example.appmastermartini_grupo9.navigation.Screen
-import com.example.appmastermartini_grupo9.ui.screens.ComunidadScreen
 import com.example.appmastermartini_grupo9.ui.screens.CrearRecetaScreen
+import com.example.appmastermartini_grupo9.ui.screens.FontSizeOnboardingScreen
 import com.example.appmastermartini_grupo9.ui.screens.HomeScreen
 import com.example.appmastermartini_grupo9.ui.screens.LoginRegistroScreen
 import com.example.appmastermartini_grupo9.ui.screens.ModoAuth
 import com.example.appmastermartini_grupo9.ui.screens.PantallaAnimaciones
 import com.example.appmastermartini_grupo9.ui.screens.PerfilCreadorScreen
 import com.example.appmastermartini_grupo9.ui.screens.PerfilFotoScreen
-import com.example.appmastermartini_grupo9.ui.screens.PostDetalleScreen
 import com.example.appmastermartini_grupo9.ui.screens.ProfileScreen
 import com.example.appmastermartini_grupo9.ui.screens.RecetaDetalleScreen
+import com.example.appmastermartini_grupo9.ui.screens.RecetasScreen
 import com.example.appmastermartini_grupo9.ui.screens.RegistroScreen
 import com.example.appmastermartini_grupo9.ui.screens.ResumenScreen
 import com.example.appmastermartini_grupo9.ui.screens.SettingsScreen
@@ -51,8 +54,6 @@ import kotlinx.coroutines.flow.collectLatest
 
 /**
  * Actividad Principal Master Martini Chile — Arquitectura UX/UI Unificada.
- * Navegación inferior de 5 elementos: Recetas · Productos · + Crear · Cursos · Comunidad.
- * Perfil ("Mi espacio") y Guardados accesibles desde el Avatar superior derecho.
  */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -73,11 +74,33 @@ class MainActivity : ComponentActivity() {
             val perfilViewModel: PerfilViewModel = viewModel()
 
             val modoOscuroDataStore by estadoViewModel.activo.collectAsState()
-            val avatarUri by perfilViewModel.imagenUri.collectAsState()
+            val sesionIniciadaDataStore by estadoViewModel.sesionIniciada.collectAsState()
             val usarModoOscuro = modoOscuroDataStore ?: isSystemInDarkTheme()
 
+            // Estados de accesibilidad para adultos mayores (Tamaño de fuente global)
+            val escalaFuente by estadoViewModel.escalaFuente.collectAsState()
+            val onboardingFuenteMostrado by estadoViewModel.onboardingFuenteMostrado.collectAsState()
+
+            // Si hay sesión persistida previamente en DataStore, sincronizamos los datos del usuario en MainViewModel
+            LaunchedEffect(sesionIniciadaDataStore) {
+                if (sesionIniciadaDataStore == true) {
+                    estadoViewModel.usuarioGuardado.collectLatest { (nombre, correo, handle) ->
+                        if (nombre.isNotBlank() && correo.isNotBlank()) {
+                            mainViewModel.iniciarSesionConDatos(nombre, correo, handle)
+                        }
+                    }
+                }
+            }
+
             AppMasterMartini_Grupo9Theme(darkTheme = usarModoOscuro) {
-                val navController = rememberNavController()
+                val densityActual = LocalDensity.current
+                CompositionLocalProvider(
+                    LocalDensity provides Density(
+                        density = densityActual.density,
+                        fontScale = densityActual.fontScale * escalaFuente
+                    )
+                ) {
+                    val navController = rememberNavController()
 
                 LaunchedEffect(key1 = Unit) {
                     mainViewModel.navigationEvents.collectLatest { event ->
@@ -127,7 +150,16 @@ class MainActivity : ComponentActivity() {
                         composable(route = Screen.Splash.route) {
                             SplashScreen(
                                 onSplashFinished = {
-                                    navController.navigate(Screen.Home.route) {
+                                    // Flujo de inicio accesible:
+                                    // 1. Si no ha configurado tamaño de letra -> Pantalla de Accesibilidad
+                                    // 2. Si ya lo configuró y hay sesión -> Home
+                                    // 3. De lo contrario -> Login
+                                    val destino = when {
+                                        onboardingFuenteMostrado != true -> Screen.FontOnboarding.route
+                                        sesionIniciadaDataStore == true -> Screen.Home.route
+                                        else -> Screen.Login.route
+                                    }
+                                    navController.navigate(destino) {
                                         popUpTo(Screen.Splash.route) { inclusive = true }
                                         launchSingleTop = true
                                     }
@@ -135,12 +167,46 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // 1. A · RECETAS ("Descubre")
+                        // 0.B Onboarding de Accesibilidad para Adultos Mayores
+                        composable(route = Screen.FontOnboarding.route) {
+                            FontSizeOnboardingScreen(
+                                escalaActual = escalaFuente,
+                                onConfirmarEscala = { escalaElegida ->
+                                    estadoViewModel.guardarEscalaFuente(escalaElegida)
+                                    estadoViewModel.marcarOnboardingFuenteMostrado()
+                                    val destino = if (sesionIniciadaDataStore == true) {
+                                        Screen.Home.route
+                                    } else {
+                                        Screen.Login.route
+                                    }
+                                    navController.navigate(destino) {
+                                        popUpTo(Screen.FontOnboarding.route) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                },
+                                onOmitir = {
+                                    estadoViewModel.marcarOnboardingFuenteMostrado()
+                                    val destino = if (sesionIniciadaDataStore == true) {
+                                        Screen.Home.route
+                                    } else {
+                                        Screen.Login.route
+                                    }
+                                    navController.navigate(destino) {
+                                        popUpTo(Screen.FontOnboarding.route) { inclusive = true }
+                                        launchSingleTop = true
+                                    }
+                                }
+                            )
+                        }
+                        // Inicio y catálogo de recetas
                         composable(route = Screen.Home.route) {
-                            HomeScreen(
-                                navController = navController,
+                            HomeScreen(viewModel = mainViewModel)
+                        }
+
+                        composable(route = Screen.Recetas.route) {
+                            RecetasScreen(
                                 viewModel = mainViewModel,
-                                avatarUri = avatarUri
+                                onBack = { navController.popBackStack() }
                             )
                         }
 
@@ -148,8 +214,7 @@ class MainActivity : ComponentActivity() {
                         composable(route = Screen.Profile.route) {
                             ProfileScreen(
                                 navController = navController,
-                                viewModel = mainViewModel,
-                                avatarUri = avatarUri
+                                viewModel = mainViewModel
                             )
                         }
 
@@ -163,21 +228,10 @@ class MainActivity : ComponentActivity() {
 
                         // 4. C · CURSOS ("Aprende")
                         composable(route = Screen.Animaciones.route) {
-                            PantallaAnimaciones(
-                                mainViewModel = mainViewModel,
-                                avatarUri = avatarUri
-                            )
+                            PantallaAnimaciones(mainViewModel = mainViewModel)
                         }
 
-                        // 5. D · COMUNIDAD ("Comunidad")
-                        composable(route = Screen.Comunidad.route) {
-                            ComunidadScreen(
-                                viewModel = mainViewModel,
-                                avatarUri = avatarUri
-                            )
-                        }
-
-                        // 6. PERFIL ("Mi espacio" desde Avatar superior)
+                        // Perfil del usuario
                         composable(route = Screen.CamaraFoto.route) {
                             PerfilFotoScreen(
                                 viewModel = perfilViewModel,
@@ -199,19 +253,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // 8. DETALLE DE PUBLICACIÓN E HILO DE CONVERSACIÓN EN COMUNIDAD
-                        composable(
-                            route = Screen.PostDetalle.ROUTE_PATTERN,
-                            arguments = listOf(navArgument("postId") { type = NavType.IntType })
-                        ) { backStackEntry ->
-                            val postId = backStackEntry.arguments?.getInt("postId") ?: 201
-                            PostDetalleScreen(
-                                postId = postId,
-                                viewModel = mainViewModel,
-                                avatarUriUsuario = avatarUri,
-                                onBack = { navController.popBackStack() }
-                            )
-                        }
 
                         // 9. PERFIL PÚBLICO DE CREADOR (DON SACO ROTO)
                         composable(
@@ -238,6 +279,7 @@ class MainActivity : ComponentActivity() {
                                 mainViewModel = mainViewModel,
                                 usuarioViewModel = usuarioViewModel,
                                 perfilViewModel = perfilViewModel,
+                                estadoViewModel = estadoViewModel,
                                 modoInicial = ModoAuth.LOGIN
                             )
                         }
@@ -248,12 +290,17 @@ class MainActivity : ComponentActivity() {
                                 mainViewModel = mainViewModel,
                                 usuarioViewModel = usuarioViewModel,
                                 perfilViewModel = perfilViewModel,
+                                estadoViewModel = estadoViewModel,
                                 modoInicial = ModoAuth.REGISTRO
                             )
                         }
 
                         composable(route = Screen.Settings.route) {
-                            SettingsScreen(navController = navController, viewModel = mainViewModel)
+                            SettingsScreen(
+                                navController = navController,
+                                viewModel = mainViewModel,
+                                estadoViewModel = estadoViewModel
+                            )
                         }
 
                         composable(route = Screen.Resumen.route) {
@@ -264,4 +311,5 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+}
 }

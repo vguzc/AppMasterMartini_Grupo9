@@ -4,22 +4,24 @@ import android.net.Uri
 
 /**
  * Sealed class para definir rutas tipo-safe en la navegación de Jetpack Compose.
- * Arquitectura UX/UI Master Martini:
- * Barra inferior (5 elementos): Recetas · Productos · + Crear · Cursos · Comunidad
- * Avatar superior: Perfil ("Mi espacio") con Mis recetas, Guardados, Mis cursos y Configuración.
  */
 sealed class Screen(val route: String) {
     // Pantalla de Inicio / Splash Screen Animada
     data object Splash : Screen("splash_page")
 
-    // 4 Destinos principales de la barra inferior + 1 Acción central (+ Crear)
-    data object Home : Screen("home_page")                // Recetas ("Descubre")
+    // Inicio y secciones principales
+    data object Home : Screen("home_page")                // Descubre
+    data object Recetas : Screen("recetas_page")
     data object Profile : Screen("profile_page")          // Productos ("Productos")
-    data object CrearReceta : Screen("crear_receta_page") // Acción central + ("Crear")
+    data object CrearReceta : Screen("crear_receta_page")
     data object Animaciones : Screen("animaciones_page")  // Cursos ("Aprende")
-    data object Comunidad : Screen("comunidad_page")      // Comunidad ("Comunidad")
 
-    // Acceso desde Avatar superior derecho ("Mi espacio" del usuario autenticado)
+    // Rutas del foro heredado, fuera del grafo de navegación.
+    data object Comunidad : Screen("comunidad_page")
+
+    data class PostDetalle(val postId: Int) : Screen("post_detalle/$postId")
+
+    // Perfil del usuario
     data object CamaraFoto : Screen("camara_page")
 
     // Perfil público de otro creador de la comunidad (ej. Don Saco Roto)
@@ -36,13 +38,8 @@ sealed class Screen(val route: String) {
         }
     }
 
-    data class PostDetalle(val postId: Int) : Screen("post_detalle/$postId") {
-        companion object {
-            const val ROUTE_PATTERN = "post_detalle/{postId}"
-        }
-    }
-
     // Rutas de autenticación y complementarias
+    data object FontOnboarding : Screen("font_onboarding_page")
     data object Login : Screen("login_page")
     data object Registro : Screen("registro")
     data object Resumen : Screen("resumen")

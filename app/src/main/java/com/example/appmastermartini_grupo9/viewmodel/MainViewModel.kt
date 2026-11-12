@@ -9,6 +9,7 @@ import com.example.appmastermartini_grupo9.model.BorradorReceta
 import com.example.appmastermartini_grupo9.model.CarpetaRecetas
 import com.example.appmastermartini_grupo9.model.ComentarioComunidad
 import com.example.appmastermartini_grupo9.model.CursoGastronomico
+import com.example.appmastermartini_grupo9.model.EspecialidadCurso
 import com.example.appmastermartini_grupo9.model.LeccionCurso
 import com.example.appmastermartini_grupo9.model.ProductItem
 import com.example.appmastermartini_grupo9.model.PublicacionComunidad
@@ -42,22 +43,22 @@ class MainViewModel : ViewModel() {
     // =========================================================================
     // 1. SESIÓN DE USUARIO Y BORRADOR DE CREACIÓN
     // =========================================================================
-    private val _sesionActiva = MutableStateFlow(true)
+    private val _sesionActiva = MutableStateFlow(false)
     val sesionActiva: StateFlow<Boolean> = _sesionActiva.asStateFlow()
 
-    private val _nombreUsuario = MutableStateFlow("Valentina Soto")
+    private val _nombreUsuario = MutableStateFlow("Invitado")
     val nombreUsuario: StateFlow<String> = _nombreUsuario.asStateFlow()
 
-    private val _handleUsuario = MutableStateFlow("valentinasoto")
+    private val _handleUsuario = MutableStateFlow("invitado")
     val handleUsuario: StateFlow<String> = _handleUsuario.asStateFlow()
 
-    private val _correoUsuario = MutableStateFlow("valentina.soto@pasteleria.cl")
+    private val _correoUsuario = MutableStateFlow("")
     val correoUsuario: StateFlow<String> = _correoUsuario.asStateFlow()
 
-    private val _telefonoUsuario = MutableStateFlow("+56 9 8412 3900")
+    private val _telefonoUsuario = MutableStateFlow("")
     val telefonoUsuario: StateFlow<String> = _telefonoUsuario.asStateFlow()
 
-    private val _rolUsuario = MutableStateFlow("Pastelería Artesanal • Providencia")
+    private val _rolUsuario = MutableStateFlow("Cuenta sin iniciar")
     val rolUsuario: StateFlow<String> = _rolUsuario.asStateFlow()
 
     // Preferencias pertinentes de la aplicación, notificaciones y privacidad
@@ -138,14 +139,8 @@ class MainViewModel : ViewModel() {
     private val _cursos = MutableStateFlow(crearCursosIniciales())
     val cursos: StateFlow<List<CursoGastronomico>> = _cursos.asStateFlow()
 
-    private val _progresoCursos = MutableStateFlow(mapOf(1 to 0.35f))
-    val progresoCursos: StateFlow<Map<Int, Float>> = _progresoCursos.asStateFlow()
-
-    private val _cursosCompradosIds = MutableStateFlow<Set<Int>>(setOf(1))
+    private val _cursosCompradosIds = MutableStateFlow<Set<Int>>(emptySet())
     val cursosCompradosIds: StateFlow<Set<Int>> = _cursosCompradosIds.asStateFlow()
-
-    private val _cursoSeleccionadoDetalle = MutableStateFlow<CursoGastronomico?>(null)
-    val cursoSeleccionadoDetalle: StateFlow<CursoGastronomico?> = _cursoSeleccionadoDetalle.asStateFlow()
 
     private val _suscritoAcademyPro = MutableStateFlow(false)
     val suscritoAcademyPro: StateFlow<Boolean> = _suscritoAcademyPro.asStateFlow()
@@ -393,13 +388,24 @@ class MainViewModel : ViewModel() {
     fun iniciarSesionConDatos(nombre: String, correo: String, handle: String = "") {
         val nombreLimpio = nombre.trim().ifBlank { "Valentina Soto" }
         _nombreUsuario.value = nombreLimpio
-        _correoUsuario.value = correo.trim()
+        _correoUsuario.value = correo.trim().ifBlank { "valentina.soto@pasteleria.cl" }
         val handleLimpio = handle.trim().removePrefix("@").ifBlank {
             nombreLimpio.lowercase().replace(" ", "")
         }
         _handleUsuario.value = handleLimpio
+        _rolUsuario.value = "Pastelería Artesanal • Providencia"
         _sesionActiva.value = true
         sincronizarPublicacionesYRecetasConUsuario(nombreLimpio)
+    }
+
+    fun entrarComoInvitado() {
+        _sesionActiva.value = false
+        _nombreUsuario.value = "Invitado"
+        _handleUsuario.value = "invitado"
+        _correoUsuario.value = ""
+        _telefonoUsuario.value = ""
+        _rolUsuario.value = "Modo Invitado"
+        sincronizarPublicacionesYRecetasConUsuario("")
     }
 
     fun registrarNuevoUsuario(
@@ -645,59 +651,26 @@ class MainViewModel : ViewModel() {
     // =========================================================================
     // ACCIONES DE CURSOS ("APRENDE")
     // =========================================================================
-    fun seleccionarCursoDetalle(curso: CursoGastronomico?) {
-        _cursoSeleccionadoDetalle.value = curso
-    }
-
     fun toggleSuscripcionPro() {
         _suscritoAcademyPro.update { !it }
     }
 
     fun inscribirCurso(cursoId: Int) {
         _cursosCompradosIds.update { it + cursoId }
-        _progresoCursos.update { mapa ->
-            val actual = mapa[cursoId] ?: 0f
-            if (actual == 0f) mapa + (cursoId to 0.15f) else mapa
-        }
     }
 
     fun comprarCurso(cursoId: Int) {
-        _cursosCompradosIds.update { it + cursoId }
-        _progresoCursos.update { mapa ->
-            val actual = mapa[cursoId] ?: 0f
-            if (actual == 0f) mapa + (cursoId to 0.15f) else mapa
-        }
+        inscribirCurso(cursoId)
     }
 
-    fun toggleLeccionCompletada(cursoId: Int, leccionId: Int) {
-        _cursos.update { lista ->
-            lista.map { c ->
-                if (c.id == cursoId) {
-                    val nuevasLecciones = c.lecciones.map { l ->
-                        if (l.id == leccionId) l.copy(completada = !l.completada) else l
-                    }
-                    val completadas = nuevasLecciones.count { it.completada }
-                    val nuevoProgreso = if (nuevasLecciones.isNotEmpty()) {
-                        completadas.toFloat() / nuevasLecciones.size
-                    } else 0f
-                    _progresoCursos.update { it + (cursoId to nuevoProgreso) }
-                    c.copy(lecciones = nuevasLecciones)
-                } else c
+    fun completarLeccion(cursoId: Int, leccionId: Int) {
+        _cursos.update { cursos ->
+            cursos.map { curso ->
+                if (curso.id != cursoId) return@map curso
+                curso.copy(lecciones = curso.lecciones.map { leccion ->
+                    if (leccion.id == leccionId) leccion.copy(completada = true) else leccion
+                })
             }
-        }
-        _cursoSeleccionadoDetalle.value?.let { actual ->
-            if (actual.id == cursoId) {
-                _cursoSeleccionadoDetalle.value = _cursos.value.find { it.id == cursoId }
-            }
-        }
-    }
-
-    fun inscribirOAvanzarCurso(cursoId: Int) {
-        _cursosCompradosIds.update { it + cursoId }
-        _progresoCursos.update { mapa ->
-            val actual = mapa[cursoId] ?: 0f
-            val siguiente = (actual + 0.25f).coerceAtMost(1f)
-            mapa + (cursoId to if (actual == 0f) 0.25f else siguiente)
         }
     }
 
@@ -773,6 +746,7 @@ class MainViewModel : ViewModel() {
                 nivel = "Fácil",
                 porciones = "8 porciones",
                 imagenRes = R.drawable.receta_foodservice,
+                imagenUri = Uri.parse("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNExG6SyAeyJ0z_PE5Km4dADWVrlju7077z8bqwfpl0Cz8ZEwO2GKn7uI&s=10"),
                 videoRes = R.raw.video_don_saco_roto_1,
                 autor = "Don Saco Roto",
                 esOficialMartini = false,
@@ -813,6 +787,7 @@ class MainViewModel : ViewModel() {
                 nivel = "Fácil",
                 porciones = "6 unidades",
                 imagenRes = R.drawable.receta_foodservice,
+                imagenUri = Uri.parse("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3sIN4ep07qsfXjOxaLx8cfZdOZbSAyqKZmRW3UTvfXIqBjPs02N3rDn-S&s=10"),
                 videoRes = R.raw.video_don_saco_roto_2,
                 autor = "Don Saco Roto",
                 esOficialMartini = false,
@@ -854,6 +829,7 @@ class MainViewModel : ViewModel() {
                 nivel = "Intermedio",
                 porciones = "12 porciones",
                 imagenRes = R.drawable.receta_pasteleria,
+                imagenUri = Uri.parse("https://cdnx.jumpseller.com/la-josefa/image/24364266/resize/1200/1200?1684012464"),
                 autor = "Don Saco Roto",
                 esOficialMartini = false,
                 esPropiaUsuario = false,
@@ -1123,6 +1099,7 @@ class MainViewModel : ViewModel() {
                 descripcion = "Es mucho más fácil de lo que parece y con pocos ingredientes. La clave: cocinar las nueces con leche, azúcar y mantequilla hasta espesar, y una masa rápida que no se pega en las manos.",
                 productosUtilizados = emptyList(),
                 imagenRes = R.drawable.receta_foodservice,
+                imagenUri = Uri.parse("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTNExG6SyAeyJ0z_PE5Km4dADWVrlju7077z8bqwfpl0Cz8ZEwO2GKn7uI&s=10"),
                 videoRes = R.raw.video_don_saco_roto_1,
                 likesBase = 34,
                 repostsBase = 12,
@@ -1155,6 +1132,7 @@ class MainViewModel : ViewModel() {
                 descripcion = "Seguramente has visto el huevo que lleva el ramen. Esto es comer arroz con huevo pero al siguiente nivel: 6 minutos exactos en agua hirviendo, choque con hielo y 24 horas en salsa de soya con cebollín, chalota y sésamo.",
                 productosUtilizados = emptyList(),
                 imagenRes = R.drawable.receta_foodservice,
+                imagenUri = Uri.parse("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3sIN4ep07qsfXjOxaLx8cfZdOZbSAyqKZmRW3UTvfXIqBjPs02N3rDn-S&s=10"),
                 videoRes = R.raw.video_don_saco_roto_2,
                 likesBase = 46,
                 repostsBase = 18,
@@ -1171,6 +1149,32 @@ class MainViewModel : ViewModel() {
                         autor = "Chef Matteo Rossi",
                         haceCuanto = "Hace 16 h",
                         texto = "Tremendo dato el de los 6 minutos exactos de cocción, la yema queda cremosa y perfecta.",
+                        esOficialMartini = true
+                    )
+                )
+            ),
+            PublicacionComunidad(
+                id = 208,
+                tipoPublicacion = "Comunidad",
+                autor = "Don Saco Roto",
+                rolAutor = "Maestro Pastelero • Santiago",
+                esOficialMartini = false,
+                esPropiaUsuario = false,
+                haceCuanto = "Hace 5 d",
+                titulo = "Torta Hojarasca Caravella & Merengue",
+                descripcion = "Capas finas y crocantes de hojarasca casera rellenas con abundantes capas de Caravella Avellana y merengue suizo flameado con soplete.",
+                productosUtilizados = listOf("caravella-cream"),
+                imagenRes = R.drawable.receta_pasteleria,
+                imagenUri = Uri.parse("https://cdnx.jumpseller.com/la-josefa/image/24364266/resize/1200/1200?1684012464"),
+                likesBase = 58,
+                repostsBase = 21,
+                recetaOficialId = 8,
+                comentarios = listOf(
+                    ComentarioComunidad(
+                        id = 1,
+                        autor = "Chef Matteo Rossi",
+                        haceCuanto = "Hace 4 d",
+                        texto = "El brillo y la combinación con Caravella Crema Avellana queda sensacional en masa de hojarasca seca.",
                         esOficialMartini = true
                     )
                 )
@@ -1251,6 +1255,7 @@ class MainViewModel : ViewModel() {
             CursoGastronomico(
                 id = 1,
                 moduloNumero = 1,
+                especialidades = setOf(EspecialidadCurso.CHOCOLATERIA),
                 titulo = "Bombonería de Autor & Templado Preciso con Ariba",
                 nivel = "Intermedio",
                 chef = "Chef Matteo Rossi",
@@ -1269,17 +1274,18 @@ class MainViewModel : ViewModel() {
                 colorFondoCardHex = 0xFFFBF4F0L,
                 descuentoBadge = "Popular",
                 lecciones = listOf(
-                    LeccionCurso(id = 101, numero = 1, titulo = "Introducción al Cacao y Variedades Ariba", duracionTexto = "14 mins", completada = true),
-                    LeccionCurso(id = 102, numero = 2, titulo = "Curva Térmica y Cristalización Beta Forma V", duracionTexto = "22 mins", completada = true),
-                    LeccionCurso(id = 103, numero = 3, titulo = "Encamisado de Moldes de Policarbonato", duracionTexto = "18 mins", completada = false),
-                    LeccionCurso(id = 104, numero = 4, titulo = "Ganache de Maracuyá y Ariba Blanco 31%", duracionTexto = "25 mins", completada = false),
-                    LeccionCurso(id = 105, numero = 5, titulo = "Sellado de Fondo, Cristalización y Desmolde", duracionTexto = "20 mins", completada = false),
-                    LeccionCurso(id = 106, numero = 6, titulo = "Conservación, Empaque y Control de Humedad", duracionTexto = "16 mins", completada = false)
+                    LeccionCurso(id = 101, numero = 1, titulo = "Introducción al Cacao y Variedades Ariba", duracionTexto = "14 mins", contenido = "Compara las coberturas Ariba según su sabor, fluidez y aplicación. Anota cuál elegirías para un relleno y cuál usarías para bañar una pieza."),
+                    LeccionCurso(id = 102, numero = 2, titulo = "Curva Térmica y Cristalización Beta Forma V", duracionTexto = "22 mins", contenido = "Identifica las tres etapas del templado: fusión, enfriamiento y remonte. Antes de practicar, consulta la curva indicada para la cobertura que elegiste y prepara un registro para anotar las temperaturas de cada etapa."),
+                    LeccionCurso(id = 103, numero = 3, titulo = "Encamisado de Moldes de Policarbonato", duracionTexto = "18 mins", contenido = "Prepara un molde limpio y seco. Durante la práctica, observa cómo se distribuye la cobertura por las cavidades y cómo cambia el grosor de la capa al retirar el exceso."),
+                    LeccionCurso(id = 104, numero = 4, titulo = "Ganache de Maracuyá y Ariba Blanco 31%", duracionTexto = "25 mins", contenido = "Organiza los ingredientes del relleno antes de empezar. Durante la práctica, observa cómo cambia la textura al incorporar el maracuyá a la cobertura blanca y registra el resultado."),
+                    LeccionCurso(id = 105, numero = 5, titulo = "Sellado de Fondo, Cristalización y Desmolde", duracionTexto = "20 mins", contenido = "Revisa el espacio que queda para cerrar cada bombón. Tras el desmolde, inspecciona la base y anota si hay grietas, bordes abiertos o piezas adheridas al molde."),
+                    LeccionCurso(id = 106, numero = 6, titulo = "Conservación, Empaque y Control de Humedad", duracionTexto = "16 mins", contenido = "Compara dos alternativas de empaque y explica cuál protege mejor los bombones del calor y la humedad durante el almacenamiento y traslado.")
                 )
             ),
             CursoGastronomico(
                 id = 2,
                 moduloNumero = 2,
+                especialidades = setOf(EspecialidadCurso.PASTELERIA_VITRINA),
                 titulo = "Entremets Modernos & Montado Estable con Decor Up",
                 nivel = "Básico",
                 chef = "Chef Sofía Lombardi",
@@ -1308,6 +1314,7 @@ class MainViewModel : ViewModel() {
             CursoGastronomico(
                 id = 3,
                 moduloNumero = 3,
+                especialidades = setOf(EspecialidadCurso.BOLLERIA, EspecialidadCurso.MASAS_DE_HOJA, EspecialidadCurso.PRODUCTOS_DE_HORNEO),
                 titulo = "Diplomado Bollería Laminada Europea con Margarina Maxime",
                 nivel = "Avanzado",
                 chef = "Chef Jean-Luc Ferrand",
@@ -1318,8 +1325,7 @@ class MainViewModel : ViewModel() {
                 descripcionDetallada = "Especialización avanzada en masas hojaldradas y bollería vienesa de alta gama. Profundizaremos en la plasticidad y punto de fusión constante de las margarinas técnicas Maxime de Grupo Unigrà, logrando capas crujientes y un alveolado panal de abeja digno de concurso internacional.",
                 imagenRes = R.drawable.curso_croissants_maxime,
                 esGratuito = false,
-                precioTexto = "$19.990 CLP",
-                precioOriginal = "$26.990 CLP",
+                precioTexto = "$7.990 CLP",
                 rating = 4.9f,
                 reviewsCount = 3120,
                 siglasBadge = "Mx",
@@ -1338,6 +1344,7 @@ class MainViewModel : ViewModel() {
             CursoGastronomico(
                 id = 4,
                 moduloNumero = 4,
+                especialidades = setOf(EspecialidadCurso.HELADERIA),
                 titulo = "Gelatería Italiana & Formulación Plant-Based OraSì",
                 nivel = "Intermedio",
                 chef = "Maestro Paolo Conti",
@@ -1346,7 +1353,7 @@ class MainViewModel : ViewModel() {
                 insumoClave = "OraSì Barista Avena & Soja",
                 resumen = "Balanceo de azúcares, sólidos no grasos (PAC/POD) y texturas sedosas 100% libres de lactosa.",
                 descripcionDetallada = "Aprende a formular y producir auténtico gelato italiano artesanal sin lácteos utilizando las bebidas vegetales de barista OraSì. Aprenderás el cálculo de balanceo entre poder anticongelante y dulzor relativo, manteniendo elasticidad y cremosidad a -14°C.",
-                imagenRes = R.drawable.curso_gelato_orasi,
+                imagenRes = R.drawable.receta_gelato,
                 esGratuito = true,
                 precioTexto = "Gratis",
                 rating = 4.9f,
@@ -1365,6 +1372,7 @@ class MainViewModel : ViewModel() {
             CursoGastronomico(
                 id = 5,
                 moduloNumero = 5,
+                especialidades = setOf(EspecialidadCurso.CHOCOLATERIA),
                 titulo = "Masterclass Chocolatería 3D & Escultura Ariba 72%",
                 nivel = "Avanzado Pro",
                 chef = "Chef Matteo Rossi",
@@ -1375,8 +1383,7 @@ class MainViewModel : ViewModel() {
                 descripcionDetallada = "La masterclass insignia de Master Martini Academy para profesionales de alta repostería. Desarrolla habilidades escultóricas con chocolate oscuro puro Ariba Fondente 72%, aplicando técnicas de encastre mecánico, pegado criogénico y terminaciones aterciopeladas con pistola y manteca de cacao pura.",
                 imagenRes = R.drawable.curso_chocolateria_nueva,
                 esGratuito = false,
-                precioTexto = "$24.990 CLP",
-                precioOriginal = "$35.990 CLP",
+                precioTexto = "$9.990 CLP",
                 rating = 5.0f,
                 reviewsCount = 4890,
                 siglasBadge = "Ar",
@@ -1396,6 +1403,7 @@ class MainViewModel : ViewModel() {
             CursoGastronomico(
                 id = 6,
                 moduloNumero = 6,
+                especialidades = setOf(EspecialidadCurso.PASTELERIA_VITRINA),
                 titulo = "Alta Pastelería & Glaseados Espejo con Mirall",
                 nivel = "Intermedio - Pro",
                 chef = "Chef Sofía Lombardi",
@@ -1406,8 +1414,7 @@ class MainViewModel : ViewModel() {
                 descripcionDetallada = "Lleva tus vitrinas al siguiente nivel con la línea de glaseados profesionales Mirall Master Martini. Domina el vertido uniforme sin burbujas sobre mousses ultracongeladas a -18°C y el efecto telaraña marmoleado.",
                 imagenRes = R.drawable.curso_glaseado_mirall,
                 esGratuito = false,
-                precioTexto = "$21.990 CLP",
-                precioOriginal = "$27.990 CLP",
+                precioTexto = "$8.990 CLP",
                 rating = 4.9f,
                 reviewsCount = 1430,
                 siglasBadge = "Mi",
@@ -1425,6 +1432,7 @@ class MainViewModel : ViewModel() {
             CursoGastronomico(
                 id = 7,
                 moduloNumero = 7,
+                especialidades = setOf(EspecialidadCurso.PASTELERIA_VITRINA),
                 titulo = "Cremas Finas de Relleno & Mousses Bravo Crem",
                 nivel = "Básico - Intermedio",
                 chef = "Maestro Paolo Conti",
@@ -1433,10 +1441,9 @@ class MainViewModel : ViewModel() {
                 insumoClave = "Bravo Crem & Pastas Concentradas",
                 resumen = "Mousses ligeras, rellenos de larga duración sin decantación y estabilidad en postres de vaso.",
                 descripcionDetallada = "Aprende a formular rellenos suaves y untuosos con Bravo Crem. Su fórmula de alta tolerancia al calor y acidez la convierte en el aliado ideal para repostería masiva y cafeterías de alto flujo.",
-                imagenRes = R.drawable.curso_mousse_bravocrem,
+                imagenRes = R.drawable.receta_pasteleria,
                 esGratuito = false,
-                precioTexto = "$18.990 CLP",
-                precioOriginal = "$24.990 CLP",
+                precioTexto = "$6.990 CLP",
                 rating = 4.8f,
                 reviewsCount = 890,
                 siglasBadge = "Br",

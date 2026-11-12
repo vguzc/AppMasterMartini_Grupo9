@@ -80,8 +80,22 @@ data class LeccionCurso(
     val numero: Int,
     val titulo: String,
     val duracionTexto: String,
-    val completada: Boolean = false
+    val completada: Boolean = false,
+    val contenido: String = "",
+    @param:androidx.annotation.RawRes val videoRes: Int = 0,
+    val videoUri: Uri? = null
 )
+
+enum class EspecialidadCurso(val etiqueta: String) {
+    CHOCOLATERIA("Chocolatería"),
+    PASTELERIA_VITRINA("Pastelería de vitrina"),
+    HELADERIA("Heladería"),
+    BOLLERIA("Bollería"),
+    MASAS_DE_HOJA("Masas de hoja"),
+    GALLETAS("Galletas"),
+    EMPANADAS("Empanadas"),
+    PRODUCTOS_DE_HORNEO("Productos de horneo")
+}
 
 /**
  * Curso o taller de formación gastronómica en la sección Aprende (Cursos).
@@ -89,6 +103,7 @@ data class LeccionCurso(
 data class CursoGastronomico(
     val id: Int,
     val moduloNumero: Int,
+    val especialidades: Set<EspecialidadCurso>,
     val titulo: String,
     val nivel: String,
     val chef: String,

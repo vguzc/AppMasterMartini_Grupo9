@@ -1,6 +1,5 @@
 package com.example.appmastermartini_grupo9.ui.screens
 
-import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -15,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -50,7 +50,6 @@ import androidx.navigation.compose.rememberNavController
 import com.example.appmastermartini_grupo9.model.ProductItem
 import com.example.appmastermartini_grupo9.model.RecetaOficial
 import com.example.appmastermartini_grupo9.navigation.Screen
-import com.example.appmastermartini_grupo9.ui.components.FloatingBottomBar
 import com.example.appmastermartini_grupo9.ui.components.MartiniTopHeader
 import com.example.appmastermartini_grupo9.ui.components.PinterestCategoryTabs
 import com.example.appmastermartini_grupo9.ui.theme.AppMasterMartini_Grupo9Theme
@@ -68,8 +67,7 @@ import com.example.appmastermartini_grupo9.viewmodel.MainViewModel
 @Composable
 fun ProfileScreen(
     navController: NavController = rememberNavController(),
-    viewModel: MainViewModel = viewModel(),
-    avatarUri: Uri? = null
+    viewModel: MainViewModel = viewModel()
 ) {
     val products = viewModel.catalogoProductos
     val recetas by viewModel.recetasOficiales.collectAsState()
@@ -116,21 +114,18 @@ fun ProfileScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding(),
+                .statusBarsPadding()
+                .navigationBarsPadding(),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
                 top = 12.dp,
-                bottom = 110.dp
+                bottom = 16.dp
             ),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item {
-                MartiniTopHeader(
-                    title = "Productos",
-                    avatarUri = avatarUri,
-                    onAvatarClick = { viewModel.navigateTo(Screen.CamaraFoto) }
-                )
+                MartiniTopHeader(title = "Productos", onBackClick = { navController.popBackStack() })
             }
 
             item {
@@ -167,11 +162,6 @@ fun ProfileScreen(
             }
         }
 
-        FloatingBottomBar(
-            selectedRoute = Screen.Profile.route,
-            onNavigate = { screen -> viewModel.navigateBottomTab(screen) },
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 }
 

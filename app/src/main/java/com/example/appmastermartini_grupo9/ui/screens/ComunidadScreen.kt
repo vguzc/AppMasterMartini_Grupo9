@@ -51,7 +51,9 @@ import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Verified
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -89,7 +91,6 @@ import com.example.appmastermartini_grupo9.R
 import com.example.appmastermartini_grupo9.model.ComentarioComunidad
 import com.example.appmastermartini_grupo9.model.PublicacionComunidad
 import com.example.appmastermartini_grupo9.navigation.Screen
-import com.example.appmastermartini_grupo9.ui.components.FloatingBottomBar
 import com.example.appmastermartini_grupo9.ui.components.MartiniProfileAvatar
 import com.example.appmastermartini_grupo9.ui.components.MartiniTopHeader
 import com.example.appmastermartini_grupo9.ui.components.PinterestCategoryTabs
@@ -162,12 +163,13 @@ fun ComunidadScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .statusBarsPadding(),
+                .statusBarsPadding()
+                .navigationBarsPadding(),
             contentPadding = PaddingValues(
                 start = 16.dp,
                 end = 16.dp,
                 top = 10.dp,
-                bottom = 110.dp
+                bottom = 16.dp
             ),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
@@ -175,9 +177,8 @@ fun ComunidadScreen(
             item {
                 MartiniTopHeader(
                     title = "Comunidad",
-                    onCreateClick = { mostrarComposerThreads = true },
-                    avatarUri = avatarUri,
-                    onAvatarClick = { viewModel.navigateTo(Screen.CamaraFoto) }
+                    onBackClick = { viewModel.navigateBack() },
+                    onCreateClick = { mostrarComposerThreads = true }
                 )
             }
 
@@ -272,11 +273,6 @@ fun ComunidadScreen(
         }
 
         // Barra flotante inferior de 4 botones
-        FloatingBottomBar(
-            selectedRoute = Screen.Comunidad.route,
-            onNavigate = { screen -> viewModel.navigateBottomTab(screen) },
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
 
         // Modal BottomSheet estilo Threads para redactar un hilo nuevo
         if (mostrarComposerThreads) {
@@ -839,6 +835,7 @@ private fun ThreadsComposerSheet(
     var titulo by rememberSaveable { mutableStateOf("") }
     var contenido by rememberSaveable { mutableStateOf("") }
     var fotoSeleccionadaUri by remember { mutableStateOf<Uri?>(null) }
+    var publicandoHilo by remember { mutableStateOf(false) }
 
     val galeriaLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -878,20 +875,33 @@ private fun ThreadsComposerSheet(
 
             Surface(
                 onClick = {
-                    if (titulo.isNotBlank() && contenido.isNotBlank()) {
+                    if (titulo.isNotBlank() && contenido.isNotBlank() && !publicandoHilo) {
+                        publicandoHilo = true
                         onPublicar(titulo, contenido, fotoSeleccionadaUri)
                     }
                 },
-                enabled = titulo.isNotBlank() && contenido.isNotBlank(),
+                enabled = titulo.isNotBlank() && contenido.isNotBlank() && !publicandoHilo,
                 shape = RoundedCornerShape(50),
                 color = if (titulo.isNotBlank() && contenido.isNotBlank()) MartiniGreen else MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
             ) {
-                Text(
-                    text = "Publicar",
-                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
-                    color = if (titulo.isNotBlank() && contenido.isNotBlank()) Color.White else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                )
+                ) {
+                    if (publicandoHilo) {
+                        CircularProgressIndicator(
+                            color = Color.White,
+                            strokeWidth = 2.dp,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                    }
+                    Text(
+                        text = if (publicandoHilo) "Publicando..." else "Publicar",
+                        style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                        color = if (titulo.isNotBlank() && contenido.isNotBlank()) Color.White else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                    )
+                }
             }
         }
 

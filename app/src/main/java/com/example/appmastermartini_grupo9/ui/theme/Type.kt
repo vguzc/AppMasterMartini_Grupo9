@@ -133,8 +133,8 @@ val Typography = Typography(
     labelSmall = TextStyle(
         fontFamily = DmSansFamily,
         fontWeight = FontWeight.Medium,
-        fontSize = 11.sp,
-        lineHeight = 15.sp,
+        fontSize = 12.sp,
+        lineHeight = 16.sp,
         letterSpacing = 0.4.sp
     )
 )

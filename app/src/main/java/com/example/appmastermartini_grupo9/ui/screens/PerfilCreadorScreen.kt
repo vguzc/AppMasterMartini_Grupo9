@@ -2,7 +2,6 @@ package com.example.appmastermartini_grupo9.ui.screens
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -17,8 +16,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,8 +32,6 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -43,10 +40,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -56,7 +49,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -66,12 +58,9 @@ import coil.compose.AsyncImage
 import com.example.appmastermartini_grupo9.R
 import com.example.appmastermartini_grupo9.model.RecetaOficial
 import com.example.appmastermartini_grupo9.navigation.Screen
-import com.example.appmastermartini_grupo9.ui.components.FloatingBottomBar
 import com.example.appmastermartini_grupo9.ui.theme.MartiniCharcoal
 import com.example.appmastermartini_grupo9.ui.theme.MartiniDarkKhaki
 import com.example.appmastermartini_grupo9.ui.theme.MartiniGreen
-import com.example.appmastermartini_grupo9.ui.theme.MartiniGreenContainer
-import com.example.appmastermartini_grupo9.ui.theme.MartiniGreenDark
 import com.example.appmastermartini_grupo9.viewmodel.MainViewModel
 
 /**
@@ -92,10 +81,6 @@ fun PerfilCreadorScreen(
     val context = LocalContext.current
     val todasLasRecetas by mainViewModel.recetasOficiales.collectAsState()
     val recetasGuardadasIds by mainViewModel.recetasGuardadasIds.collectAsState()
-    val publicaciones by mainViewModel.publicacionesComunidad.collectAsState()
-
-    var siguiendo by rememberSaveable { mutableStateOf(false) }
-    var tabSeleccionada by rememberSaveable { mutableIntStateOf(0) } // 0 = Recetas, 1 = Comunidad
 
     // Intercepta el botón/gesto de atrás físico de Android
     BackHandler {
@@ -106,18 +91,10 @@ fun PerfilCreadorScreen(
         it.autor.equals(autorNombre, ignoreCase = true)
     }
 
-    val publicacionesDelCreador = publicaciones.filter {
-        it.autor.equals(autorNombre, ignoreCase = true)
-    }
 
     val esDonSaco = autorNombre.contains("Don Saco Roto", ignoreCase = true)
     val fotoHeroRes = if (esDonSaco) R.drawable.avatar_don_saco_roto else R.drawable.receta_pasteleria
     val handleTexto = if (esDonSaco) "@donsacoroto" else "@${autorNombre.lowercase().replace(" ", "")}"
-    val bioTexto = if (esDonSaco) {
-        "Fanático de la buena pastelería y de las preparaciones generosas de Master Martini. ¡En mi taller nunca sobra nada, siempre hay espacio para otra porción!"
-    } else {
-        "Maestro pastelero y creador gastronómico apasionado de la comunidad Master Martini Chile."
-    }
 
     Box(
         modifier = Modifier
@@ -127,13 +104,14 @@ fun PerfilCreadorScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
         ) {
             // 1. CABECERA HERO INMERSIVA ESTILO MOCKUP
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(490.dp)
+                    .height(285.dp)
             ) {
                 // Imagen de fondo (Hero portrait)
                 Image(
@@ -235,135 +213,6 @@ fun PerfilCreadorScreen(
                         ),
                         color = Color.White.copy(alpha = 0.72f)
                     )
-
-                    // Fila de botones de acción: Botón principal "Seguir" + botón de mensaje
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.padding(top = 2.dp, bottom = 2.dp)
-                    ) {
-                        Button(
-                            onClick = {
-                                siguiendo = !siguiendo
-                                val msg = if (siguiendo) "¡Ahora sigues a $autorNombre!" else "Dejaste de seguir a $autorNombre"
-                                Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-                            },
-                            shape = RoundedCornerShape(50),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (siguiendo) MartiniGreenContainer else Color.White,
-                                contentColor = if (siguiendo) MartiniGreenDark else Color.Black
-                            ),
-                            modifier = Modifier.height(44.dp)
-                        ) {
-                            if (siguiendo) {
-                                Icon(
-                                    imageVector = Icons.Default.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                                Spacer(modifier = Modifier.width(6.dp))
-                                Text("Siguiendo", fontWeight = FontWeight.Bold)
-                            } else {
-                                Text("Seguir", fontWeight = FontWeight.Bold)
-                            }
-                        }
-
-                        Surface(
-                            onClick = {
-                                Toast.makeText(context, "Mensaje directo con $autorNombre disponible próximamente", Toast.LENGTH_SHORT).show()
-                            },
-                            shape = CircleShape,
-                            color = Color.White.copy(alpha = 0.22f),
-                            modifier = Modifier.size(44.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = Icons.Default.ChatBubbleOutline,
-                                    contentDescription = "Enviar mensaje",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(19.dp)
-                                )
-                            }
-                        }
-                    }
-
-                    // Estadísticas (Following | Followers | Creations / Recetas)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 6.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "89",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp
-                                ),
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Siguiendo",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
-                                color = Color.White.copy(alpha = 0.65f)
-                            )
-                        }
-
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "1.4K",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp
-                                ),
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Seguidores",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
-                                color = Color.White.copy(alpha = 0.65f)
-                            )
-                        }
-
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "${recetasDelCreador.size}",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp
-                                ),
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Recetas",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
-                                color = Color.White.copy(alpha = 0.65f)
-                            )
-                        }
-                    }
-
-                    // Tarjeta translúcida de Bio
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = Color.Black.copy(alpha = 0.40f),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp)
-                    ) {
-                        Text(
-                            text = bioTexto,
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 12.5.sp,
-                                lineHeight = 17.sp
-                            ),
-                            color = Color.White.copy(alpha = 0.88f),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                        )
-                    }
                 }
             }
 
@@ -372,155 +221,44 @@ fun PerfilCreadorScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 14.dp)
-                    .padding(top = 16.dp, bottom = 120.dp),
+                    .padding(top = 16.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Selector de pestañas: Recetas · Comunidad
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    listOf(
-                        0 to ("Recetas" to "${recetasDelCreador.size}"),
-                        1 to ("Comunidad" to "${publicacionesDelCreador.size}")
-                    ).forEach { (idx, par) ->
-                        val (label, count) = par
-                        val seleccionada = tabSeleccionada == idx
-                        Surface(
-                            onClick = { tabSeleccionada = idx },
-                            shape = RoundedCornerShape(50),
-                            color = if (seleccionada) MartiniGreen else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f),
-                            modifier = Modifier.weight(1f)
+                Text("Recetas (${recetasDelCreador.size})", style = MaterialTheme.typography.titleLarge)
+                if (recetasDelCreador.isEmpty()) {
+                    Surface(
+                        shape = RoundedCornerShape(20.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(26.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Row(
-                                modifier = Modifier.padding(vertical = 10.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "$label ($count)",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = if (seleccionada) FontWeight.Bold else FontWeight.SemiBold,
-                                        fontSize = 13.5.sp
-                                    ),
-                                    color = if (seleccionada) Color.White else MaterialTheme.colorScheme.onSurface
-                                )
-                            }
+                            Text(
+                                text = "Sin recetas publicadas aún",
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            Text(
+                                text = "Pronto $autorNombre compartirá nuevas creaciones.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
+                            )
                         }
-                    }
-                }
-
-                // Contenido según pestaña
-                if (tabSeleccionada == 0) {
-                    // MOSAICO DE RECETAS TIPO PINES DE PINTEREST
-                    if (recetasDelCreador.isEmpty()) {
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(26.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = "Sin recetas publicadas aún",
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "Pronto $autorNombre compartirá nuevas creaciones.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
-                                )
-                            }
-                        }
-                    } else {
-                        CreatorRecipePinsMasonry(
-                            recetas = recetasDelCreador,
-                            recetasGuardadasIds = recetasGuardadasIds,
-                            onToggleGuardar = { mainViewModel.toggleGuardarReceta(it) },
-                            onOpenReceta = { mainViewModel.navigateTo(Screen.RecetaDetalle(it)) }
-                        )
                     }
                 } else {
-                    // PUBLICACIONES EN COMUNIDAD
-                    if (publicacionesDelCreador.isEmpty()) {
-                        Surface(
-                            shape = RoundedCornerShape(20.dp),
-                            color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(26.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = "Sin aportes en comunidad",
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                                Text(
-                                    text = "$autorNombre aún no ha participado en el foro.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f)
-                                )
-                            }
-                        }
-                    } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            publicacionesDelCreador.forEach { pub ->
-                                Surface(
-                                    onClick = { mainViewModel.navigateTo(Screen.PostDetalle(pub.id)) },
-                                    shape = RoundedCornerShape(16.dp),
-                                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(14.dp),
-                                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                                    ) {
-                                        Surface(
-                                            shape = RoundedCornerShape(50),
-                                            color = MartiniGreenContainer.copy(alpha = 0.6f)
-                                        ) {
-                                            Text(
-                                                text = pub.tipoPublicacion,
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MartiniGreenDark,
-                                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
-                                            )
-                                        }
-                                        Text(
-                                            text = pub.titulo,
-                                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                            color = MaterialTheme.colorScheme.onSurface
-                                        )
-                                        Text(
-                                            text = pub.descripcion,
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f),
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    CreatorRecipePinsMasonry(
+                        recetas = recetasDelCreador,
+                        recetasGuardadasIds = recetasGuardadasIds,
+                        onToggleGuardar = { mainViewModel.toggleGuardarReceta(it) },
+                        onOpenReceta = { mainViewModel.navigateTo(Screen.RecetaDetalle(it)) }
+                    )
                 }
             }
         }
 
-        // 3. Barra inferior flotante fija
-        FloatingBottomBar(
-            selectedRoute = "",
-            onNavigate = { screen -> mainViewModel.navigateBottomTab(screen) },
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 }
 
@@ -599,6 +337,8 @@ private fun CreatorPinCard(
                     model = receta.imagenUri,
                     contentDescription = receta.titulo,
                     contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = receta.imagenRes),
+                    error = painterResource(id = receta.imagenRes),
                     modifier = Modifier.fillMaxSize()
                 )
             } else {
@@ -623,6 +363,27 @@ private fun CreatorPinCard(
                         )
                     )
             )
+
+            // Indicador de video si la receta tiene formato audiovisual
+            if (receta.videoRes != 0 || receta.videoUri != null) {
+                Surface(
+                    shape = CircleShape,
+                    color = Color.Black.copy(alpha = 0.55f),
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .size(28.dp)
+                        .align(Alignment.TopStart)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.PlayArrow,
+                            contentDescription = "Video receta",
+                            tint = Color.White,
+                            modifier = Modifier.size(16.dp)
+                        )
+                    }
+                }
+            }
 
             // Botón superior de Guardar/Marcador para que el usuario guarde la receta
             Surface(

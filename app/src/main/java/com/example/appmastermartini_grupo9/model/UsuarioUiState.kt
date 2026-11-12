@@ -24,6 +24,7 @@ data class UsuarioUiState(
     val confirmarClave: String = "",
     val direccion: String = "",
     val telefono: String = "",
+    val rut: String = "",
     val aceptaTerminos: Boolean = true,
     val errores: UsuarioErrores = UsuarioErrores()
 )

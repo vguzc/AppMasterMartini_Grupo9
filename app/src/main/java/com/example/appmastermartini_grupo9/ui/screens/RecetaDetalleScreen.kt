@@ -141,6 +141,8 @@ fun RecetaDetalleScreen(
                     model = receta.imagenUri,
                     contentDescription = receta.titulo,
                     contentScale = ContentScale.Crop,
+                    placeholder = painterResource(id = receta.imagenRes),
+                    error = painterResource(id = receta.imagenRes),
                     modifier = Modifier.fillMaxSize()
                 )
             } else {

@@ -11,7 +11,6 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -19,7 +18,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,9 +40,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -63,7 +67,6 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
-import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Storage
@@ -93,22 +96,23 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -116,7 +120,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -125,7 +128,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.example.appmastermartini_grupo9.R
 import com.example.appmastermartini_grupo9.navigation.Screen
-import com.example.appmastermartini_grupo9.ui.components.FloatingBottomBar
 import com.example.appmastermartini_grupo9.ui.components.ImagenInteligente
 import com.example.appmastermartini_grupo9.ui.components.MartiniProfileAvatar
 import com.example.appmastermartini_grupo9.ui.theme.AppMasterMartini_Grupo9Theme
@@ -161,7 +163,8 @@ private data class PinUsuarioItem(
     val titulo: String,
     val categoria: String,
     val tiempo: String,
-    val esSubidaPorUsuario: Boolean,
+    val textoAccion: String,
+    val eliminaReceta: Boolean = false,
     val imagenRes: Int,
     val imagenUri: Uri? = null,
     val onOpen: () -> Unit,
@@ -209,7 +212,6 @@ fun PerfilFotoScreen(
 
     val sesionActiva by mainViewModel.sesionActiva.collectAsState()
     val nombreUsuario by mainViewModel.nombreUsuario.collectAsState()
-    val handleUsuario by mainViewModel.handleUsuario.collectAsState()
     val correoUsuario by mainViewModel.correoUsuario.collectAsState()
     val rolUsuario by mainViewModel.rolUsuario.collectAsState()
 
@@ -217,7 +219,6 @@ fun PerfilFotoScreen(
     val recetasGuardadasIds by mainViewModel.recetasGuardadasIds.collectAsState()
     val carpetasUsuario by mainViewModel.carpetasUsuario.collectAsState()
     val cursos by mainViewModel.cursos.collectAsState()
-    val progresoCursos by mainViewModel.progresoCursos.collectAsState()
     val publicaciones by mainViewModel.publicacionesComunidad.collectAsState()
 
     val context = LocalContext.current
@@ -279,8 +280,7 @@ fun PerfilFotoScreen(
             // Si está en Configuración ("Tu cuenta"), volver al perfil
             mostrarConfiguracion = false
         } else {
-            // Si está en el perfil, volver a Descubre
-            mainViewModel.navigateBottomTab(Screen.Home)
+            mainViewModel.navigateBack()
         }
     }
 
@@ -296,7 +296,8 @@ fun PerfilFotoScreen(
             titulo = rec.titulo,
             categoria = rec.categoria,
             tiempo = rec.tiempo,
-            esSubidaPorUsuario = rec.esPropiaUsuario,
+            textoAccion = if (rec.esPropiaUsuario) "Eliminar receta" else "Quitar de guardadas",
+            eliminaReceta = rec.esPropiaUsuario,
             imagenRes = rec.imagenRes,
             imagenUri = rec.imagenUri,
             onOpen = { mainViewModel.navigateTo(Screen.RecetaDetalle(rec.id)) },
@@ -316,7 +317,8 @@ fun PerfilFotoScreen(
             titulo = rec.titulo,
             categoria = rec.categoria,
             tiempo = rec.tiempo,
-            esSubidaPorUsuario = true,
+            textoAccion = "Eliminar receta",
+            eliminaReceta = true,
             imagenRes = rec.imagenRes,
             imagenUri = rec.imagenUri,
             onOpen = { mainViewModel.navigateTo(Screen.RecetaDetalle(rec.id)) },
@@ -330,7 +332,7 @@ fun PerfilFotoScreen(
             titulo = rec.titulo,
             categoria = rec.categoria,
             tiempo = rec.tiempo,
-            esSubidaPorUsuario = false,
+            textoAccion = "Quitar de guardadas",
             imagenRes = rec.imagenRes,
             imagenUri = rec.imagenUri,
             onOpen = { mainViewModel.navigateTo(Screen.RecetaDetalle(rec.id)) },
@@ -587,6 +589,7 @@ fun PerfilFotoScreen(
             modoOscuroActivo = modoOscuroActivo == true,
             mostrarMensajeGuardado = mostrarMensajeGuardado,
             onToggleModoOscuro = { estadoViewModel.alternarEstado() },
+            onCerrarSesion = { estadoViewModel.guardarSesion(false) },
             onIrContacto = {
                 mostrarConfiguracion = false
                 mainViewModel.navigateTo(Screen.Registro)
@@ -610,8 +613,9 @@ fun PerfilFotoScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .statusBarsPadding()
+                        .navigationBarsPadding()
                         .verticalScroll(rememberScrollState())
-                        .padding(PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 110.dp)),
+                        .padding(PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 16.dp)),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Row(
@@ -651,22 +655,17 @@ fun PerfilFotoScreen(
                         EmptyPinterestBoardState(
                             titulo = "Aún no tienes recetas guardadas",
                             subtitulo = "Toca el ícono de marcador en Descubre para guardar tus recetas favoritas aquí.",
-                            textoBoton = "Explorar Descubre",
+                            textoBoton = "Explorar recetas",
                             onClick = {
                                 carpetaAbiertaId = -1
-                                mainViewModel.navigateBottomTab(Screen.Home)
+                                mainViewModel.navigateBottomTab(Screen.Recetas)
                             }
                         )
                     } else {
-                        PinterestUserPinsMasonry(pines = pinesGuardados)
+                        ListaRecetasPerfil(pines = pinesGuardados)
                     }
                 }
 
-                FloatingBottomBar(
-                    selectedRoute = "",
-                    onNavigate = { screen -> mainViewModel.navigateBottomTab(screen) },
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                )
             }
             return
         }
@@ -756,7 +755,7 @@ fun PerfilFotoScreen(
                     titulo = rec.titulo,
                     categoria = rec.categoria,
                     tiempo = rec.tiempo,
-                    esSubidaPorUsuario = rec.esPropiaUsuario,
+                    textoAccion = "Quitar de la carpeta",
                     imagenRes = rec.imagenRes,
                     imagenUri = rec.imagenUri,
                     onOpen = { mainViewModel.navigateTo(Screen.RecetaDetalle(rec.id)) },
@@ -775,8 +774,9 @@ fun PerfilFotoScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .statusBarsPadding()
+                        .navigationBarsPadding()
                         .verticalScroll(rememberScrollState())
-                        .padding(PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 110.dp)),
+                        .padding(PaddingValues(start = 14.dp, end = 14.dp, top = 12.dp, bottom = 16.dp)),
                     verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     Row(
@@ -865,15 +865,10 @@ fun PerfilFotoScreen(
                             }
                         }
                     } else {
-                        PinterestUserPinsMasonry(pines = pinesCarpeta)
+                        ListaRecetasPerfil(pines = pinesCarpeta)
                     }
                 }
 
-                FloatingBottomBar(
-                    selectedRoute = "",
-                    onNavigate = { screen -> mainViewModel.navigateBottomTab(screen) },
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                )
             }
             return
         }
@@ -890,13 +885,14 @@ fun PerfilFotoScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
         ) {
             // 1. HERO PORTRAIT HEADER (ESTILO MOCKUP OLIVIA BEITS)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(490.dp)
+                    .height(320.dp)
             ) {
                 // Imagen de portada / fondo del hero
                 if (imagenUri != null) {
@@ -967,7 +963,7 @@ fun PerfilFotoScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Surface(
-                        onClick = { mainViewModel.navigateBottomTab(Screen.Home) },
+                        onClick = { mainViewModel.navigateBack() },
                         shape = CircleShape,
                         color = Color.Black.copy(alpha = 0.45f),
                         modifier = Modifier.size(40.dp)
@@ -975,7 +971,7 @@ fun PerfilFotoScreen(
                         Box(contentAlignment = Alignment.Center) {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = "Volver a Descubre",
+                                contentDescription = "Volver",
                                 tint = Color.White,
                                 modifier = Modifier.size(19.dp)
                             )
@@ -1018,16 +1014,6 @@ fun PerfilFotoScreen(
                             letterSpacing = (-0.5).sp
                         ),
                         color = Color.White
-                    )
-
-                    // Handle @usuario
-                    Text(
-                        text = "@${if (sesionActiva) handleUsuario else "invitado"}",
-                        style = MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.Normal
-                        ),
-                        color = Color.White.copy(alpha = 0.72f)
                     )
 
                     // Fila de botones de acción
@@ -1092,84 +1078,6 @@ fun PerfilFotoScreen(
                             }
                         }
                     }
-
-                    // Estadísticas (Following | Followers | Creations / Recetas)
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 24.dp, vertical = 6.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "186",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp
-                                ),
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Siguiendo",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
-                                color = Color.White.copy(alpha = 0.65f)
-                            )
-                        }
-
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "24K",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp
-                                ),
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Seguidores",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
-                                color = Color.White.copy(alpha = 0.65f)
-                            )
-                        }
-
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(
-                                text = "${misRecetasSubidas.size}",
-                                style = MaterialTheme.typography.titleLarge.copy(
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp
-                                ),
-                                color = Color.White
-                            )
-                            Text(
-                                text = "Recetas",
-                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
-                                color = Color.White.copy(alpha = 0.65f)
-                            )
-                        }
-                    }
-
-                    // Tarjeta translúcida de Bio
-                    Surface(
-                        shape = RoundedCornerShape(16.dp),
-                        color = Color.Black.copy(alpha = 0.40f),
-                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.15f)),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 4.dp)
-                    ) {
-                        Text(
-                            text = "Especialista en repostería fina y chocolatería artesanal con coberturas Ariba y cremas Decor Up de Master Martini Chile.",
-                            style = MaterialTheme.typography.bodySmall.copy(
-                                fontSize = 12.5.sp,
-                                lineHeight = 17.sp
-                            ),
-                            color = Color.White.copy(alpha = 0.88f),
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
-                        )
-                    }
                 }
             }
 
@@ -1178,106 +1086,32 @@ fun PerfilFotoScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 14.dp)
-                    .padding(top = 16.dp, bottom = 120.dp),
+                    .padding(top = 16.dp, bottom = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp)
             ) {
-                // Selector de pestaÃ±as: Guardadas pÃºblicas Â· Subidas Â· Todas
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    listOf(
-                        0 to ("Guardadas" to "${recetasGuardadas.size}"),
-                        1 to ("Subidas" to "${misRecetasSubidas.size}"),
-                        2 to ("Todas" to "${todasRecetasUsuario.size}")
-                    ).forEach { (idx, par) ->
-                        val (label, count) = par
-                        val seleccionada = pestanaActiva == idx
-                        Surface(
-                            onClick = { pestanaActiva = idx },
-                            shape = RoundedCornerShape(50),
-                            color = if (seleccionada) MartiniGreen else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.75f),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(vertical = 10.dp),
-                                horizontalArrangement = Arrangement.Center,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = "$label ($count)",
-                                    style = MaterialTheme.typography.labelMedium.copy(
-                                        fontWeight = if (seleccionada) FontWeight.Bold else FontWeight.SemiBold,
-                                        fontSize = 13.sp
-                                    ),
-                                    color = if (seleccionada) Color.White else MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                        }
-                    }
-                }
+                SelectorRecetasPerfil(
+                    cantidades = listOf(recetasGuardadas.size, misRecetasSubidas.size, todasRecetasUsuario.size),
+                    seleccionada = pestanaActiva,
+                    onSeleccionar = { pestanaActiva = it }
+                )
 
-                // Buscador sutil
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(46.dp)
-                        .clip(RoundedCornerShape(50))
-                        .border(
-                            width = 1.dp,
-                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.18f),
-                            shape = RoundedCornerShape(50)
-                        )
-                        .padding(horizontal = 16.dp),
-                    contentAlignment = Alignment.CenterStart
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                            modifier = Modifier.size(19.dp)
-                        )
-                        Box(modifier = Modifier.weight(1f)) {
-                            if (busqueda.isEmpty()) {
-                                Text(
-                                    text = "Buscar en mis recetas...",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
-                                )
-                            }
-                            BasicTextField(
-                                value = busqueda,
-                                onValueChange = { busqueda = it },
-                                singleLine = true,
-                                textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                    color = MaterialTheme.colorScheme.onBackground
-                                ),
-                                cursorBrush = SolidColor(MartiniGreen),
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
+                OutlinedTextField(
+                    value = busqueda,
+                    onValueChange = { busqueda = it },
+                    label = { Text("Buscar en mis recetas") },
+                    leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                    trailingIcon = {
                         if (busqueda.isNotEmpty()) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = "Limpiar bÃºsqueda",
-                                tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
-                                modifier = Modifier
-                                    .size(18.dp)
-                                    .clickable { busqueda = "" }
-                            )
+                            IconButton(onClick = { busqueda = "" }) {
+                                Icon(Icons.Default.Close, contentDescription = "Limpiar búsqueda")
+                            }
                         }
-                    }
-                }
+                    },
+                    singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                )
 
-                // CuadrÃ­cula estilo Pines de Pinterest con las fotos de las recetas
                 when (pestanaActiva) {
                     0 -> {
                         val guardadasFiltradas = pinesGuardados.filter { pin ->
@@ -1287,12 +1121,12 @@ fun PerfilFotoScreen(
                         if (guardadasFiltradas.isEmpty()) {
                             EmptyPinterestBoardState(
                                 titulo = "Aún no tienes recetas guardadas",
-                                subtitulo = "Toca el ícono de marcador en cualquier receta de Descubre para guardarla y verla públicamente aquí.",
-                                textoBoton = "Explorar Descubre",
-                                onClick = { mainViewModel.navigateBottomTab(Screen.Home) }
+                                subtitulo = "Toca el ícono de marcador en cualquier receta del catálogo para guardarla y verla públicamente aquí.",
+                                textoBoton = "Explorar recetas",
+                                onClick = { mainViewModel.navigateBottomTab(Screen.Recetas) }
                             )
                         } else {
-                            PinterestUserPinsMasonry(pines = guardadasFiltradas)
+                            ListaRecetasPerfil(pines = guardadasFiltradas)
                         }
                     }
 
@@ -1304,12 +1138,12 @@ fun PerfilFotoScreen(
                         if (subidasFiltradas.isEmpty()) {
                             EmptyPinterestBoardState(
                                 titulo = "Aún no has subido recetas",
-                                subtitulo = "Comparte tus preparaciones con la comunidad tocando el botón + arriba a la derecha.",
+                                subtitulo = "Toca «Subir receta» para añadir una preparación al catálogo.",
                                 textoBoton = "Subir receta",
                                 onClick = { mainViewModel.navigateTo(Screen.CrearReceta) }
                             )
                         } else {
-                            PinterestUserPinsMasonry(pines = subidasFiltradas)
+                            ListaRecetasPerfil(pines = subidasFiltradas)
                         }
                     }
 
@@ -1322,21 +1156,16 @@ fun PerfilFotoScreen(
                             EmptyPinterestBoardState(
                                 titulo = "No hay recetas disponibles",
                                 subtitulo = "Tus recetas guardadas y subidas aparecerÃ¡n reunidas en esta vista.",
-                                textoBoton = "Explorar Descubre",
-                                onClick = { mainViewModel.navigateBottomTab(Screen.Home) }
+                                textoBoton = "Explorar recetas",
+                                onClick = { mainViewModel.navigateBottomTab(Screen.Recetas) }
                             )
                         } else {
-                            PinterestUserPinsMasonry(pines = todasFiltradas)
+                            ListaRecetasPerfil(pines = todasFiltradas)
                         }
                     }
                 }
             }
         }
-        FloatingBottomBar(
-            selectedRoute = Screen.CamaraFoto.route,
-            onNavigate = { screen -> mainViewModel.navigateBottomTab(screen) },
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 }
 
@@ -1532,179 +1361,111 @@ private fun CollectionSwipeableCard(
     }
 }
 
-/**
- * Mosaico escalonado de 2 columnas para recetas guardadas o subidas.
- */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun PinterestUserPinsMasonry(pines: List<PinUsuarioItem>) {
-    val izquierda = pines.filterIndexed { index, _ -> index % 2 == 0 }
-    val derecha = pines.filterIndexed { index, _ -> index % 2 == 1 }
-    val alturasIzq = listOf(235.dp, 265.dp, 220.dp)
-    val alturasDer = listOf(265.dp, 225.dp, 250.dp)
+private fun SelectorRecetasPerfil(
+    cantidades: List<Int>,
+    seleccionada: Int,
+    onSeleccionar: (Int) -> Unit
+) {
+    val opciones = listOf(
+        "Guardadas" to Icons.Default.Bookmark,
+        "Subidas" to Icons.Default.Add,
+        "Todas" to Icons.Default.Description
+    )
+    val escalaFuente = LocalDensity.current.fontScale
+    val colores = MaterialTheme.colorScheme
 
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth().selectableGroup()) {
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            maxItemsInEachRow = if (maxWidth >= 320.dp * escalaFuente) 3 else 1,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            izquierda.forEachIndexed { idx, pin ->
-                UserPinCard(
-                    pin = pin,
-                    cardHeight = alturasIzq[idx % alturasIzq.size]
-                )
-            }
-        }
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            derecha.forEachIndexed { idx, pin ->
-                UserPinCard(
-                    pin = pin,
-                    cardHeight = alturasDer[idx % alturasDer.size]
-                )
+            opciones.forEachIndexed { indice, (etiqueta, icono) ->
+                val activa = seleccionada == indice
+                Surface(
+                    selected = activa,
+                    onClick = { onSeleccionar(indice) },
+                    modifier = Modifier.weight(1f).heightIn(min = 72.dp),
+                    shape = RoundedCornerShape(14.dp),
+                    color = if (activa) colores.primary else colores.surfaceVariant,
+                    contentColor = if (activa) colores.onPrimary else colores.onSurfaceVariant
+                ) {
+                    Column(
+                        modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)
+                    ) {
+                        Icon(
+                            imageVector = if (activa) Icons.Default.CheckCircle else icono,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Text(
+                            text = etiqueta,
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = cantidades[indice].toString(),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
             }
         }
     }
 }
 
 @Composable
-private fun UserPinCard(
-    pin: PinUsuarioItem,
-    cardHeight: Dp
-) {
-    Surface(
-        onClick = pin.onOpen,
-        shape = RoundedCornerShape(18.dp),
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(cardHeight)
+private fun ListaRecetasPerfil(pines: List<PinUsuarioItem>) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            if (pin.imagenUri != null) {
-                AsyncImage(
-                    model = pin.imagenUri,
-                    contentDescription = pin.titulo,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Image(
-                    painter = painterResource(id = pin.imagenRes),
-                    contentDescription = pin.titulo,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colorStops = arrayOf(
-                                0.0f to Color.Transparent,
-                                0.50f to Color.Transparent,
-                                1.0f to Color(0xFF141817).copy(alpha = 0.80f)
-                            )
-                        )
-                    )
-            )
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(9.dp)
-                    .align(Alignment.TopCenter),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (pin.esSubidaPorUsuario) {
-                    Surface(
-                        shape = RoundedCornerShape(50),
-                        color = MartiniGreen.copy(alpha = 0.92f)
-                    ) {
-                        Text(
-                            text = "Subida",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp,
-                                letterSpacing = 0.sp,
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            color = Color.White,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
-                        )
-                    }
-                } else {
-                    Spacer(modifier = Modifier.size(1.dp))
-                }
-
-                if (pin.onRemoveOrUnbookmark != null) {
-                    Surface(
-                        onClick = pin.onRemoveOrUnbookmark,
-                        shape = CircleShape,
-                        color = Color.White.copy(alpha = 0.90f),
-                        modifier = Modifier.size(30.dp)
-                    ) {
-                        Box(contentAlignment = Alignment.Center) {
-                            Icon(
-                                imageVector = if (pin.esSubidaPorUsuario) Icons.Default.DeleteOutline else Icons.Default.Bookmark,
-                                contentDescription = null,
-                                tint = if (pin.esSubidaPorUsuario) MaterialTheme.colorScheme.error else MartiniGreen,
-                                modifier = Modifier.size(15.dp)
-                            )
+        pines.forEach { pin ->
+            key(pin.uniqueKey) {
+                var confirmarEliminacion by rememberSaveable { mutableStateOf(false) }
+                TarjetaVistaReceta(
+                    titulo = pin.titulo,
+                    detalle = listOf(pin.categoria, pin.tiempo).filter { it.isNotBlank() }.joinToString(" · "),
+                    imagenRes = pin.imagenRes,
+                    imagenUri = pin.imagenUri,
+                    onClick = pin.onOpen,
+                    modifier = Modifier.fillMaxWidth().aspectRatio(1.5f),
+                    acciones = {
+                        pin.onRemoveOrUnbookmark?.let { quitar ->
+                            OutlinedButton(
+                                onClick = {
+                                    if (pin.eliminaReceta) confirmarEliminacion = true else quitar()
+                                },
+                                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                            ) {
+                                Text(pin.textoAccion)
+                            }
                         }
                     }
-                }
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(Alignment.BottomStart)
-                    .padding(11.dp),
-                verticalArrangement = Arrangement.spacedBy(5.dp)
-            ) {
-                Surface(
-                    shape = RoundedCornerShape(50),
-                    color = Color.White.copy(alpha = 0.94f)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 7.dp, vertical = 3.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Schedule,
-                            contentDescription = null,
-                            tint = MartiniCharcoal,
-                            modifier = Modifier.size(11.dp)
-                        )
-                        Text(
-                            text = pin.tiempo,
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontSize = 10.sp,
-                                letterSpacing = 0.sp,
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            color = MartiniCharcoal
-                        )
-                    }
-                }
-                Text(
-                    text = pin.titulo,
-                    style = MaterialTheme.typography.titleSmall.copy(
-                        fontWeight = FontWeight.Bold,
-                        lineHeight = 17.sp
-                    ),
-                    color = Color.White,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
                 )
+                if (confirmarEliminacion) {
+                    AlertDialog(
+                        onDismissRequest = { confirmarEliminacion = false },
+                        title = { Text("¿Eliminar esta receta?") },
+                        text = { Text(pin.titulo) },
+                        confirmButton = {
+                            TextButton(onClick = {
+                                confirmarEliminacion = false
+                                pin.onRemoveOrUnbookmark?.invoke()
+                            }) {
+                                Text("Eliminar receta")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { confirmarEliminacion = false }) { Text("Cancelar") }
+                        }
+                    )
+                }
             }
         }
     }
@@ -1776,7 +1537,6 @@ private fun EmptyPinterestBoardState(
  *     con Switch directo y persistencia DataStore), Unidades e idioma.
  *   * Soporte y ayuda: Centro de ayuda (FAQ), Contacto con soporte técnico,
  *     Información legal y versión, Cerrar sesión, Eliminar cuenta.
- * - Barra inferior flotante FloatingBottomBar con pestaña Perfil activa.
  * =========================================================================
  */
 @Composable
@@ -1787,6 +1547,7 @@ private fun ConfiguracionUsuarioScreen(
     modoOscuroActivo: Boolean,
     mostrarMensajeGuardado: Boolean,
     onToggleModoOscuro: () -> Unit,
+    onCerrarSesion: () -> Unit = {},
     onIrContacto: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -1800,7 +1561,6 @@ private fun ConfiguracionUsuarioScreen(
     val rolUsuario by mainViewModel.rolUsuario.collectAsState()
 
     val notifPushGeneral by mainViewModel.notifPushGeneral.collectAsState()
-    val notifForoComunidad by mainViewModel.notifForoComunidad.collectAsState()
     val notifRecetasYCursos by mainViewModel.notifRecetasYCursos.collectAsState()
     val notifCatalogoProductos by mainViewModel.notifCatalogoProductos.collectAsState()
     val boletinCorreo by mainViewModel.boletinCorreo.collectAsState()
@@ -1924,12 +1684,12 @@ private fun ConfiguracionUsuarioScreen(
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(
-                        text = "Configura quién puede ver tu actividad en la comunidad de Master Martini.",
+                        text = "Configura quién puede ver tu perfil y tus recetas.",
                         style = MaterialTheme.typography.bodyMedium
                     )
                     SettingsSwitchRow(
-                        titulo = "Perfil público en Comunidad",
-                        subtitulo = "Muestra tus recetas subidas y aportes a otros usuarios de la app.",
+                        titulo = "Perfil público",
+                        subtitulo = "Muestra tus recetas a otros usuarios de la app.",
                         checked = perfilPublicoComunidad,
                         onCheckedChange = { mainViewModel.togglePerfilPublicoComunidad() }
                     )
@@ -1969,13 +1729,6 @@ private fun ConfiguracionUsuarioScreen(
                         onCheckedChange = { mainViewModel.toggleNotifPushGeneral() }
                     )
                     HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
-                    SettingsSwitchRow(
-                        titulo = "Foro Comunidad",
-                        subtitulo = "Avisar cuando respondan a tus consultas técnicas",
-                        checked = notifPushGeneral && notifForoComunidad,
-                        enabled = notifPushGeneral,
-                        onCheckedChange = { mainViewModel.toggleNotifForoComunidad() }
-                    )
                     SettingsSwitchRow(
                         titulo = "Recetas y Cursos",
                         subtitulo = "Nuevas fórmulas oficiales ✓ Martini y clases",
@@ -2328,6 +2081,7 @@ private fun ConfiguracionUsuarioScreen(
                 Button(
                     onClick = {
                         mainViewModel.cerrarSesion()
+                        onCerrarSesion()
                         mostrarDialogoCerrarSesion = false
                         onBack()
                         Toast.makeText(context, "Sesión cerrada", Toast.LENGTH_SHORT).show()
@@ -2367,6 +2121,7 @@ private fun ConfiguracionUsuarioScreen(
                 Button(
                     onClick = {
                         mainViewModel.eliminarCuentaUsuario()
+                        onCerrarSesion()
                         mostrarDialogoEliminarCuenta = false
                         Toast.makeText(context, "Cuenta eliminada y sesión cerrada", Toast.LENGTH_SHORT).show()
                         mainViewModel.navigateTo(Screen.Login)
@@ -2407,10 +2162,6 @@ private fun ConfiguracionUsuarioScreen(
                     FaqItem(
                         pregunta = "¿Cómo organizo mis recetas guardadas?",
                         respuesta = "En tu perfil entra a la pestaña Guardadas: la carpeta 'Todas' agrupa todo lo guardado y con el ícono de carpeta puedes crear colecciones propias."
-                    )
-                    FaqItem(
-                        pregunta = "¿Dónde hago consultas técnicas sobre Decor Up, Ariba o Caravella?",
-                        respuesta = "Toca el botón '+' arriba a la derecha y elige 'Hacer consulta o post' para publicar tu duda o resultado en el Foro de Comunidad."
                     )
                 }
             },
@@ -2475,8 +2226,9 @@ private fun ConfiguracionUsuarioScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .statusBarsPadding()
+                .navigationBarsPadding()
                 .verticalScroll(rememberScrollState())
-                .padding(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 120.dp)),
+                .padding(PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp)),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             // 1. Cabecera superior idéntica a Pinterest: <        Tu cuenta
@@ -2589,13 +2341,13 @@ private fun ConfiguracionUsuarioScreen(
 
             PinterestSettingsItem(
                 titulo = "Visibilidad del perfil",
-                subtitulo = "Perfil público en Comunidad",
+                subtitulo = "Perfil público",
                 onClick = { mostrarDialogoVisibilidad = true }
             )
 
             PinterestSettingsItem(
                 titulo = "Notificaciones",
-                subtitulo = "Alertas push, foro, recetas y boletín",
+                subtitulo = "Alertas push, recetas, cursos y boletín",
                 onClick = { mostrarDialogoNotificaciones = true }
             )
 
@@ -2692,11 +2444,6 @@ private fun ConfiguracionUsuarioScreen(
             Spacer(modifier = Modifier.height(20.dp))
         }
 
-        FloatingBottomBar(
-            selectedRoute = Screen.CamaraFoto.route,
-            onNavigate = { screen -> mainViewModel.navigateBottomTab(screen) },
-            modifier = Modifier.align(Alignment.BottomCenter)
-        )
     }
 }
 

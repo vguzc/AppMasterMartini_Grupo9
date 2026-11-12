@@ -70,6 +70,10 @@ class UsuarioViewModel : ViewModel() {
         }
     }
 
+    fun onRutChange(valor: String) {
+        _estado.update { it.copy(rut = valor) }
+    }
+
     // Actualiza el checkbox de aceptación de términos
     fun onAceptarTerminosChange(valor: Boolean) {
         _estado.update {
